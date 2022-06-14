@@ -1,0 +1,39 @@
+type Bike {
+  id: ID!
+  model: String!
+  color: String!
+  location: String!
+  rating: String!
+  rented: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}
+
+input BikeCreateInput {
+  model: String!
+  color: String!
+  location: String!
+}
+
+input BikeUpdateInput {
+  model: String
+  color: String
+  location: String
+  rating: String
+  rented: Boolean
+}
+
+type Payload {
+  success: Boolean!
+}
+
+type Query {
+  bike(id: String!): Bike
+  bikes: [Bike]
+}
+
+type Mutation {
+  createBike(input: BikeCreateInput!): Bike
+  deleteBike(id: String!): Bike
+  updateBike(id: String!, input: BikeUpdateInput): Bike
+}
