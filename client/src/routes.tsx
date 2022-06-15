@@ -4,8 +4,10 @@ import { Navigate, PathRouteProps, Route, Routes } from "react-router-dom";
 import Guard from "./components/Guard";
 import Login from "./pages/auth/login";
 import Register from "./pages/auth/register";
+import Bikes from "./pages/bikes";
 import Dashboard from "./pages/dashboard";
 import NotFound from "./pages/notFound";
+import Users from "./pages/users";
 
 export type RouteConfig = PathRouteProps & {
   guard?: any;
@@ -49,6 +51,16 @@ const routes = [
     path: "/dashboard",
     guard: Guard,
     element: <Dashboard />,
+  },
+  {
+    path: "/users",
+    guard: Guard,
+    element: <Users />,
+  },
+  {
+    path: "/bikes",
+    guard: Guard,
+    element: <Bikes />,
   },
 ];
 
