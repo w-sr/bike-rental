@@ -1,4 +1,12 @@
 type Bike {
+  # id: ID
+  # model: String
+  # color: String
+  # location: String
+  # rating: String
+  # rented: Boolean
+  # createdAt: String
+  # updatedAt: String
   id: ID!
   model: String!
   color: String!
@@ -23,13 +31,20 @@ input BikeUpdateInput {
   rented: Boolean
 }
 
+input BikeInputFilter {
+  model: String
+  color: String
+  location: String
+  rate: String
+}
+
 type Payload {
   success: Boolean!
 }
 
 type Query {
   bike(id: String!): Bike
-  bikes: [Bike]
+  bikes(input: BikeInputFilter): [Bike]
 }
 
 type Mutation {

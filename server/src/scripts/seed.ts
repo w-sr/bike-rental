@@ -1,6 +1,7 @@
 import { connection } from "mongoose";
-import { MongoHelper } from "../helpers/mongoHelpers";
+import { DEFAULT_PASSWORD } from "../constants/common";
 import { encryptPassword } from "../helpers/authHelpers";
+import { MongoHelper } from "../helpers/mongoHelpers";
 import { Bike, User } from "../models";
 
 const mongoHelper = new MongoHelper();
@@ -11,7 +12,7 @@ const seed = async () => {
   await connection.dropDatabase();
 
   console.log("Database clean");
-  const password = await encryptPassword("123456789");
+  const password = await encryptPassword(DEFAULT_PASSWORD);
 
   const user = new User({
     first_name: "Manager1",

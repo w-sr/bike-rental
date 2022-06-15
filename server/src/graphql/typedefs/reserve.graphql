@@ -1,0 +1,23 @@
+type Reservation {
+  id: ID!
+  user: User!
+  bike: Bike!
+  start_date: String!
+  end_date: String!
+}
+
+input ReservationCreateInput {
+  user: String!
+  bike: String!
+  start_date: String!
+  end_date: String!
+}
+
+type Query {
+  reservation(id: String!): Reservation
+  reservations: [Reservation]
+}
+
+type Mutation {
+  createReservation(input: ReservationCreateInput!): Reservation
+}

@@ -1,33 +1,53 @@
 import { Bike } from "../models";
 import { Context } from "../models/context";
-import { VerifyAuthorization } from "../decorators/auth.decorator";
+// import { VerifyAuthorization } from "../decorators/auth.decorator";
 
 export class BikeController {
-  @VerifyAuthorization
+  // @VerifyAuthorization
   async getBike(args: any, ctx: Context) {
     return Bike.find({ id: args["id"] }).then((bikes: any) => bikes[0]);
   }
 
-  @VerifyAuthorization
+  // @VerifyAuthorization
   async getBikes(args: any, ctx: Context) {
-    return Bike.find().then((bikes: any) => bikes);
+    const { input: { model = "", color = "", location = "", rate = "" } = {} } =
+      args;
+    const query: any = {};
+
+    if (model) {
+      query.model = {
+        $regex: new RegExp(model, "g"),
+      };
+    }
+    if (color) {
+      query.color = color;
+    }
+    if (location) {
+      query.location = location;
+    }
+    if (rate) {
+      query.rating = parseInt(rate);
+    }
+    return Bike.find(query);
   }
 
-  @VerifyAuthorization
+  // @VerifyAuthorization
   async addBike(input: any, ctx: any) {
-    return Bike.create(input.input).then((food: any) => food);
+    return Bike.create({ ...input.input, rating: 0, rented: false }).then(
+      (bike: any) => bike
+    );
   }
 
-  @VerifyAuthorization
+  // @VerifyAuthorization
   async updateBike(input: any, ctx: any) {
     return Bike.findOneAndUpdate({ id: input.id }, input.input, {
       new: true,
-    }).then((food: any) => food);
+    }).then((bike: any) => bike);
   }
 
-  @VerifyAuthorization
+  // @VerifyAuthorization
   async deleteBike(input: any, ctx: any) {
-    return Bike.findOneAndDelete({ id: input.id }).then((food: any) => food);
+    return Bike.findOneAndDelete({ id: input.id }).then((bike: any) => bike);
   }
 }
 
