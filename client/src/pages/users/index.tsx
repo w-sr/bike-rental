@@ -91,7 +91,7 @@ const Users = () => {
   );
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", flex: 1, mx: 10 }}>
       <Box m={2} display="flex" justifyContent="flex-end">
         <Button variant="contained" onClick={handleAdd}>
           Add User

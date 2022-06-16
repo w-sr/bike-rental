@@ -1,60 +1,99 @@
-import { useMutation, useQuery } from "@apollo/client";
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  TextField,
-  Typography,
-} from "@mui/material";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { useEffect, useState } from "react";
-import BikeCard from "../components/BikeCard";
-import Filter from "../components/Filter";
-import { CREATE_RESERVATION } from "../utils/mutations/reservations";
-import { GET_BIKES } from "../utils/quries/bikes";
-import { useQueryMe } from "../utils/quries/me";
-import { useQueryReservations } from "../utils/quries/reservations";
-import { Bike } from "../utils/type";
+import { useQuery } from "@apollo/client";
+import { InputLabel } from "@mui/material";
+import Box from "@mui/material/Box";
+import MenuItem from "@mui/material/MenuItem";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { useEffect, useMemo, useState } from "react";
+import { GET_RESERVATIONS } from "../utils/quries/reservations";
+import { Bike, Reservation, User } from "../utils/type";
 
 const Dashboard = () => {
-  const [modal, setModal] = useState(false);
-
   const [filterModel, setFilterModel] = useState<Record<string, string>>({
-    model: "",
-    color: "",
-    location: "",
-    rate: "0",
+    user: "",
+    bike: "",
   });
 
-  const [start, setStart] = useState<Date | null>(new Date());
-  const [end, setEnd] = useState<Date | null>(new Date());
-  const [bikeId, setBikeId] = useState<string>();
-  const handleStartChange = (newValue: Date | null) => {
-    setStart(newValue);
-  };
-  const handleEndChange = (newValue: Date | null) => {
-    setEnd(newValue);
-  };
+  const { data, refetch } = useQuery(GET_RESERVATIONS);
 
-  const { data: me } = useQueryMe();
-  const { data, loading: bikesLoading, refetch } = useQuery(GET_BIKES);
-  const bikes = data?.bikes;
-  const { data: reservations, loading: reservationsLoading } =
-    useQueryReservations();
+  const reservations = data?.reservations as Reservation[];
 
-  const [reserveBike] = useMutation(CREATE_RESERVATION);
+  const rows = data?.reservations.map((d: Reservation) => {
+    const { user, bike, ...r } = d;
+    const { id: bike_id, ...b } = bike;
+    const { id: user_id, ...u } = user;
+    return { ...b, ...u, ...r };
+  });
 
-  const filterChange = (key: string, value: string) => {
-    const newFilter = { ...filterModel };
-    newFilter[key] = value;
-    setFilterModel(newFilter);
-  };
+  const users = reservations?.reduce<User[]>(
+    (res: User[], current: Reservation) => {
+      const x = res.find((item: User) => item.id === current.user.id);
+      if (!x) res.push(current.user);
+      return res;
+    },
+    []
+  );
+
+  const bikes = reservations?.reduce<Bike[]>(
+    (res: Bike[], current: Reservation) => {
+      const x = res.find((item: Bike) => item.id === current.bike.id);
+      if (!x) res.push(current.bike);
+      return res;
+    },
+    []
+  );
+
+  const columns = useMemo<GridColDef[]>(
+    () => [
+      {
+        field: "first_name",
+        headerName: "First Name",
+        width: 150,
+      },
+      {
+        field: "last_name",
+        headerName: "Last Name",
+        width: 150,
+      },
+      {
+        field: "email",
+        headerName: "Email",
+        width: 160,
+      },
+      {
+        field: "role",
+        headerName: "Role",
+        width: 120,
+      },
+      {
+        field: "model",
+        headerName: "Model",
+        editable: false,
+      },
+      {
+        field: "location",
+        headerName: "Location",
+        width: 150,
+      },
+      {
+        field: "color",
+        headerName: "Color",
+        sortable: false,
+        width: 160,
+      },
+      {
+        field: "start_date",
+        headerName: "Start Date",
+        width: 160,
+      },
+      {
+        field: "end_date",
+        headerName: "End Date",
+        width: 160,
+      },
+    ],
+    []
+  );
 
   useEffect(() => {
     if (refetch) {
@@ -66,112 +105,67 @@ const Dashboard = () => {
     }
   }, [filterModel, refetch]);
 
-  const onSetRate = (rate: number) => console.log("onSetRate", rate);
-
-  const onReserve = async () => {
-    try {
-      const res = await reserveBike({
-        variables: {
-          input: {
-            user: me?.id,
-            bike: bikeId,
-            start_date: start?.toISOString().split("T")[0],
-            end_date: end?.toISOString().split("T")[0],
-          },
-        },
-      });
-      if (res.data.createReservation) {
-        setModal(false);
-      }
-    } catch (error) {
-      console.log(error);
-    }
+  const handleChange = (event: SelectChangeEvent) => {
+    const { name, value } = event.target;
+    const newFilter = { ...filterModel };
+    newFilter[name] = value;
+    setFilterModel(newFilter);
   };
 
-  const onCancelReserve = () => console.log("onSetRate");
-
   return (
-    <Box py={3} px={6} display="flex" sx={{ flexGrow: 1 }}>
-      <Box sx={{ width: 480 }}>
-        <Filter filterChange={filterChange} model={filterModel} />
-      </Box>
-      <Box>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h4">My bikes</Typography>
-          <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
-          <Box sx={{ display: "flex", flexWrap: "wrap" }}></Box>
+    <Box sx={{ flexGrow: 1, mx: 5 }}>
+      <Box sx={{ flexGrow: 1 }} display={"flex"} justifyContent="flex-end">
+        <Box display="flex" alignItems="center">
+          <InputLabel sx={{ mr: 1 }}>Filter by Bike</InputLabel>
+          <Select
+            labelId="filter-by-bike"
+            id="filter-by-bike"
+            size="small"
+            name="bike"
+            onChange={handleChange}
+            sx={{ minWidth: 120 }}
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {bikes?.map((bike: Bike) => (
+              <MenuItem key={bike.id} value={bike.id}>
+                {bike.model}
+              </MenuItem>
+            ))}
+          </Select>
         </Box>
-
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h4">Available bikes</Typography>
-          <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
-          <Box sx={{ display: "flex", flexWrap: "wrap" }}>
-            {bikes &&
-              bikes
-                .filter((bike: Bike) => !bike.rented)
-                .map((bike: Bike) => (
-                  <Box m={2} key={bike.id}>
-                    <BikeCard
-                      bike={bike}
-                      setRate={onSetRate}
-                      reserve={() => {
-                        setModal(true);
-                        setBikeId(bike.id);
-                      }}
-                      cancelReserve={onCancelReserve}
-                    />
-                  </Box>
-                ))}
-          </Box>
+        <Box display="flex" alignItems="center" mx={2}>
+          <InputLabel sx={{ mr: 1 }}>Filter by User</InputLabel>
+          <Select
+            labelId="filter-by-user"
+            id="filter-by-user"
+            name="user"
+            onChange={handleChange}
+            size="small"
+            sx={{ minWidth: 120 }}
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {users?.map((user: User) => (
+              <MenuItem key={user.id} value={user.id}>
+                {user.first_name + " " + user.last_name}
+              </MenuItem>
+            ))}
+          </Select>
         </Box>
       </Box>
-
-      <Dialog
-        open={modal}
-        sx={{ "& .MuiDialog-paper": { minWidth: 500 } }}
-        maxWidth="xs"
-        aria-labelledby="add-fodd-dialog"
-      >
-        <DialogTitle>Reserve</DialogTitle>
-        <DialogContent>
-          <Box m={2}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DesktopDatePicker
-                label="Start Date"
-                inputFormat="MM/dd/yyyy"
-                value={start}
-                onChange={handleStartChange}
-                renderInput={(params: any) => <TextField {...params} />}
-              />
-            </LocalizationProvider>
-          </Box>
-          <Box m={2}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DesktopDatePicker
-                label="End Date"
-                inputFormat="MM/dd/yyyy"
-                value={end}
-                onChange={handleEndChange}
-                renderInput={(params: any) => <TextField {...params} />}
-              />
-            </LocalizationProvider>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Box mt={5} display="flex" justifyContent="flex-end">
-            <Button
-              onClick={() => setModal(false)}
-              autoFocus
-              sx={{ marginRight: 2 }}
-            >
-              Cancel
-            </Button>
-            <Button variant="contained" onClick={onReserve}>
-              Reserve
-            </Button>
-          </Box>
-        </DialogActions>
-      </Dialog>
+      <Box m={2} sx={{ height: 400, flexGrow: 1 }}>
+        <DataGrid
+          rows={rows || []}
+          columns={columns}
+          pageSize={5}
+          rowsPerPageOptions={[5]}
+          checkboxSelection
+          disableSelectionOnClick
+        />
+      </Box>
     </Box>
   );
 };

@@ -7,8 +7,8 @@ export const UPDATE_BIKE = gql`
       model
       color
       location
-      rating
-      rented
+      rate
+      reserved
     }
   }
 `;
@@ -20,14 +20,14 @@ export const CREATE_BIKE = gql`
       model
       color
       location
-      rating
-      rented
+      rate
+      reserved
     }
   }
 `;
 
 export const DELETE_BIKE = gql`
-  mutation DeleteBike($id: ID!) {
+  mutation DeleteBike($id: String!) {
     deleteBike(id: $id) {
       id
     }

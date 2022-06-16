@@ -9,3 +9,11 @@ export const CREATE_RESERVATION = gql`
     }
   }
 `;
+
+export const CANCEL_RESERVATION = gql`
+  mutation CancelReservation($id: ID!) {
+    cancelReservation(id: $id) {
+      success
+    }
+  }
+`;

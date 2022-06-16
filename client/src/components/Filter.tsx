@@ -17,7 +17,7 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
     border: "1px solid #ced4da",
     fontSize: 16,
     width: "auto",
-    padding: "10px 12px",
+    padding: "5px 6px",
   },
 }));
 
@@ -75,11 +75,11 @@ const Filter = ({ filterChange, model }: FilterProps) => {
       </Box>
       <Box my={1}>
         <FormControl variant="standard">
-          <InputLabel shrink htmlFor="rating-search">
+          <InputLabel shrink htmlFor="rate-search">
             Average rate
           </InputLabel>
           <BootstrapInput
-            id="rating-search"
+            id="rate-search"
             name="rate"
             type="number"
             value={model.rate}

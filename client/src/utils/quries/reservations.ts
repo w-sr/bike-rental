@@ -2,8 +2,8 @@ import { gql, useQuery } from "@apollo/client";
 import { Reservation, QueryHookResult } from "../type";
 
 export const GET_RESERVATIONS = gql`
-  query getReservations {
-    reservations {
+  query getReservations($filter: ReservationInputFilter) {
+    reservations(input: $filter) {
       id
       user {
         id
@@ -17,8 +17,8 @@ export const GET_RESERVATIONS = gql`
         model
         color
         location
-        rating
-        rented
+        rate
+        reserved
       }
       start_date
       end_date
@@ -42,8 +42,8 @@ export const GET_RESERVATION = gql`
         model
         color
         location
-        rating
-        rented
+        rate
+        reserved
       }
       start_date
       end_date

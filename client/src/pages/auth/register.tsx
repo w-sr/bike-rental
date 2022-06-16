@@ -43,12 +43,13 @@ const Register = () => {
         },
       });
       if (res.data.register) {
-        navigate("/users");
+        localStorage.setItem("token", res.data.register.token);
+        navigate("/bikes");
       }
     },
   });
 
-  const { values, setFieldValue, touched, errors, handleSubmit } = formik;
+  const { values, setFieldValue, touched, errors } = formik;
 
   return (
     <Box

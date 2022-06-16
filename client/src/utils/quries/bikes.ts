@@ -8,8 +8,9 @@ export const GET_BIKES = gql`
       model
       color
       location
-      rating
-      rented
+      rate
+      reserved
+      reserved_user_id
     }
   }
 `;
@@ -21,8 +22,8 @@ export const GET_BIKE = gql`
       model
       color
       location
-      rating
-      rented
+      rate
+      reserved
     }
   }
 `;

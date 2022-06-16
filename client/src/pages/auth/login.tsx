@@ -45,7 +45,11 @@ const Login = () => {
           return;
         }
         localStorage.setItem("token", res.data.login.token);
-        navigate("/dashboard");
+        if (res.data.login.user.role === "user") {
+          navigate("/bikes");
+        } else {
+          navigate("/dashboard");
+        }
       } catch (error) {
         console.log("error", error);
       }

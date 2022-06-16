@@ -17,8 +17,9 @@ export type Bike = {
   model: string;
   color: string;
   location: string;
-  rating: number;
-  rented: boolean;
+  rate: string;
+  reserved: boolean;
+  reserved_user_id: string;
 };
 
 export type Reservation = {

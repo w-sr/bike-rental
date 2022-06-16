@@ -11,6 +11,7 @@ import { useFormik } from "formik";
 import { useEffect } from "react";
 import * as Yup from "yup";
 import { CREATE_BIKE, UPDATE_BIKE } from "../../utils/mutations/bikes";
+import { GET_BIKES } from "../../utils/quries/bikes";
 import { Bike } from "../../utils/type";
 
 type Props = {
@@ -24,8 +25,8 @@ const initialValues = {
   model: "",
   color: "",
   location: "",
-  rating: 0,
-  rented: false,
+  rate: 0,
+  reserved: false,
 };
 
 const BikeModal = ({ onClose, open, type, bike }: Props) => {
@@ -39,35 +40,44 @@ const BikeModal = ({ onClose, open, type, bike }: Props) => {
     initialValues: bike ? bike : initialValues,
     validationSchema: FormSchema,
     onSubmit: async (values) => {
-      if (type === "edit") {
-        const variables = {
-          input: {
-            model: values.model,
-            color: values.color,
-            location: values.location,
-            rating: values.rating,
-            rented: values.rented,
-          },
-          id: bike?.id,
-        };
-        await updateBike({ variables });
-      } else if (type === "add") {
-        const variables = {
-          input: {
-            model: values.model,
-            color: values.color,
-            location: values.location,
-          },
-        };
-        await createBike({ variables });
+      try {
+        if (type === "update") {
+          const variables = {
+            input: {
+              model: values.model,
+              color: values.color,
+              location: values.location,
+              rate: values.rate,
+              reserved: values.reserved,
+            },
+            id: bike?.id,
+          };
+          await updateBike({ variables });
+        } else if (type === "add") {
+          const variables = {
+            input: {
+              model: values.model,
+              color: values.color,
+              location: values.location,
+            },
+          };
+          await createBike({ variables });
+        }
+        onClose();
+      } catch (error) {
+        console.log(error);
       }
     },
   });
 
   const { values, setFieldValue, touched, errors } = formik;
 
-  const [updateBike] = useMutation(UPDATE_BIKE);
-  const [createBike] = useMutation(CREATE_BIKE);
+  const [updateBike] = useMutation(UPDATE_BIKE, {
+    refetchQueries: [GET_BIKES],
+  });
+  const [createBike] = useMutation(CREATE_BIKE, {
+    refetchQueries: [GET_BIKES],
+  });
 
   useEffect(() => {
     const values = bike ? { ...bike } : { ...initialValues };
@@ -83,7 +93,7 @@ const BikeModal = ({ onClose, open, type, bike }: Props) => {
     onClose();
   };
 
-  const renderTitle = () => (type === "add" ? "Add Bike" : "Edit Bike");
+  const renderTitle = () => (type === "add" ? "Add Bike" : "Update Bike");
 
   const renderHandleButton = () => (type === "add" ? "Add" : "Update");
 
@@ -133,31 +143,31 @@ const BikeModal = ({ onClose, open, type, bike }: Props) => {
               helperText={touched.location && errors.location}
             />
           </Box>
-          {type === "edit" && (
+          {type === "update" && (
             <>
               <Box my={2}>
                 <TextField
                   fullWidth
-                  id="rating"
-                  name="rating"
+                  id="rate"
+                  name="rate"
                   label="Rating"
                   type="number"
-                  value={values.rating}
-                  onChange={(e) => setFieldValue("rating", e.target.value)}
-                  error={touched.rating && Boolean(errors.rating)}
-                  helperText={touched.rating && errors.rating}
+                  value={values.rate}
+                  onChange={(e) => setFieldValue("rate", e.target.value)}
+                  error={touched.rate && Boolean(errors.rate)}
+                  helperText={touched.rate && errors.rate}
                 />
               </Box>
               <Box my={2}>
                 <TextField
                   fullWidth
-                  id="rented"
-                  name="rented"
-                  label="Rented"
-                  value={values.rented}
-                  onChange={(e) => setFieldValue("rented", e.target.value)}
-                  error={touched.rented && Boolean(errors.rented)}
-                  helperText={touched.rented && errors.rented}
+                  id="reserved"
+                  name="reserved"
+                  label="reserved"
+                  value={values.reserved}
+                  onChange={(e) => setFieldValue("reserved", e.target.value)}
+                  error={touched.reserved && Boolean(errors.reserved)}
+                  helperText={touched.reserved && errors.reserved}
                 />
               </Box>
             </>
