@@ -1,18 +1,11 @@
 type Bike {
-  # id: ID
-  # model: String
-  # color: String
-  # location: String
-  # rating: String
-  # rented: Boolean
-  # createdAt: String
-  # updatedAt: String
   id: ID!
   model: String!
   color: String!
   location: String!
-  rating: String!
-  rented: Boolean!
+  rate: String!
+  reserved_user_id: String
+  reserved: Boolean!
   createdAt: String!
   updatedAt: String!
 }
@@ -27,8 +20,8 @@ input BikeUpdateInput {
   model: String
   color: String
   location: String
-  rating: String
-  rented: Boolean
+  rate: String
+  reserved: Boolean
 }
 
 input BikeInputFilter {

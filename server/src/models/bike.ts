@@ -5,8 +5,10 @@ const BikeSchema = new Schema(
     model: { type: String, required: true },
     color: { type: String, required: true },
     location: { type: String, required: true },
-    rating: { type: Number, required: true },
-    rented: { type: Boolean, required: true },
+    rate: { type: String, required: true },
+    reserved_user_id: { type: String },
+    reserved: { type: Boolean, required: true },
+    deleted: { type: Boolean, default: false },
   },
   {
     timestamps: true,

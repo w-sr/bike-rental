@@ -13,11 +13,17 @@ input ReservationCreateInput {
   end_date: String!
 }
 
+input ReservationInputFilter {
+  user: String
+  bike: String
+}
+
 type Query {
   reservation(id: String!): Reservation
-  reservations: [Reservation]
+  reservations(input: ReservationInputFilter): [Reservation]
 }
 
 type Mutation {
   createReservation(input: ReservationCreateInput!): Reservation
+  cancelReservation(id: ID!): Payload
 }

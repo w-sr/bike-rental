@@ -60,7 +60,7 @@ const resolvers = {
         });
         const input = { email: regUser.email };
         const token = getToken(input);
-        return { user: { ...regUser }, token };
+        return { user: regUser, token };
       } catch (error) {
         throw error;
       }

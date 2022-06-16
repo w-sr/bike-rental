@@ -1,18 +1,26 @@
-import { User, Bike, Reservation } from "../models";
+import mongoose from "mongoose";
+import { Bike, Reservation } from "../models";
 import { Context } from "../models/context";
-import { VerifyAuthorization } from "../decorators/auth.decorator";
 
 export class BikeController {
-  @VerifyAuthorization
+  // @VerifyAuthorization
   async getReservation(args: any, ctx: Context) {
-    return Reservation.find({ id: args["id"] }).then(
+    return await Reservation.find({ id: args["id"] }).then(
       (reservations: any) => reservations[0]
     );
   }
 
-  @VerifyAuthorization
+  // @VerifyAuthorization
   async getReservations(args: any, ctx: Context) {
-    return Reservation.find()
+    const { input: { user = "", bike = "" } = {} } = args;
+    const query: any = {};
+    if (user) {
+      query.user = user;
+    }
+    if (bike) {
+      query.bike = bike;
+    }
+    return await Reservation.find(query)
       .populate({
         path: "bike",
         model: "Bike",
@@ -24,24 +32,24 @@ export class BikeController {
       .then((reservations: any) => reservations);
   }
 
-  @VerifyAuthorization
-  async addReservation(input: any, ctx: any) {
-    return Reservation.create(input.input).then(
+  // @VerifyAuthorization
+  async addReservation(args: any, ctx: any) {
+    await Bike.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(args.input.bike) },
+      { reserved: true, reserved_user_id: args.input.user }
+    );
+    return await Reservation.create(args.input).then(
       (reservation: any) => reservation
     );
   }
 
-  // @VerifyAuthorization
-  // async updateBike(input: any, ctx: any) {
-  //   return Bike.findOneAndUpdate({ id: input.id }, input.input, {
-  //     new: true,
-  //   }).then((bike: any) => bike);
-  // }
-
-  // @VerifyAuthorization
-  // async deleteBike(input: any, ctx: any) {
-  //   return Bike.findOneAndDelete({ id: input.id }).then((bike: any) => bike);
-  // }
+  async cancelReservation(args: any, ctx: any) {
+    await Bike.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(args.id) },
+      { reserved: false, reserved_user_id: null }
+    );
+    return { success: true };
+  }
 }
 
 export default BikeController;

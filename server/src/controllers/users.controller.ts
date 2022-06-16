@@ -11,9 +11,10 @@ export class UserController {
     return User.find({ id: args["id"] }).then((users: any) => users[0]);
   }
 
-  @VerifyAuthorization
+  // @VerifyAuthorization
   async getUsers(args: any, ctx: Context) {
-    return User.find().then((users: any) => users);
+    const query: any = { deleted: { $eq: false } };
+    return User.find(query);
   }
 
   @VerifyAuthorization
@@ -35,9 +36,12 @@ export class UserController {
 
   @VerifyAuthorization
   async deleteUser(input: any, ctx: any) {
-    return User.findOneAndDelete({
-      _id: new mongoose.Types.ObjectId(input.id),
-    }).then((user: any) => user);
+    return User.findOneAndUpdate(
+      {
+        _id: new mongoose.Types.ObjectId(input.id),
+      },
+      { deleted: true }
+    ).then((user: any) => user);
   }
 }
 
