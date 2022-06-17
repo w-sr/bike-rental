@@ -6,8 +6,6 @@ const BikeSchema = new Schema(
     color: { type: String, required: true },
     location: { type: String, required: true },
     rate: { type: String, required: true },
-    reserved_user_id: { type: String },
-    reserved: { type: Boolean, required: true },
     deleted: { type: Boolean, default: false },
   },
   {

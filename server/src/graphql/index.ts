@@ -7,14 +7,33 @@ const mHelper = new MongoHelper();
 
 mHelper.connectDB();
 
+// const handleDuplicateField = (err) => {
+//   let message;
+//   const keys = Object.keys(err.keyValue);
+//   if (keys.includes("email")) message = "User already exists";
+//   return message;
+// };
+
 const setHttpPlugin = {
   async requestDidStart() {
     return {
       async willSendResponse({ response }: any) {
+        console.log("response?.errors?.[0]", response?.errors?.[0]);
         if (
-          response?.errors?.[0]?.message === ErrorConstants.USER_NOT_AUTHORIZED
+          response?.errors?.[0]?.message ===
+            ErrorConstants.USER_NOT_AUTHORIZED ||
+          response?.errors?.[0]?.message === ErrorConstants.USER_NOT_FOUND ||
+          response?.errors?.[0]?.message === ErrorConstants.USER_EXISTED
         ) {
           response.http.status = 401;
+        } else if (
+          response?.errors?.[0]?.message === ErrorConstants.WRONG_PASSWORD
+        ) {
+          response.http.status = 400;
+        } else if (
+          response?.errors?.[0]?.message === ErrorConstants.PERMISSION_DENIED
+        ) {
+          response.http.status = 403;
         }
       },
     };
@@ -25,7 +44,9 @@ const apolloServer = new ApolloServer({
   schema,
   introspection: true,
   context: async ({ req }) => {
-    return await mHelper.validateUser(req);
+    if (!req.body.query.match("login") && !req.body.query.match("register")) {
+      return await mHelper.validateUser(req);
+    }
   },
   plugins: [setHttpPlugin],
 });

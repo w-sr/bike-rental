@@ -1,5 +1,7 @@
+import { AuthenticationError } from "apollo-server-errors";
 import * as jwt from "jsonwebtoken";
 import Mongoose from "mongoose";
+import { ErrorConstants } from "../constants/errors.constants";
 import {
   AUTH_SALT,
   DB_HOST,
@@ -12,7 +14,7 @@ import User from "../models/user";
 
 const dbURL = `mongodb://${DB_HOST}:${DB_PORT}/${DB_NAME}`;
 const options: Mongoose.ConnectOptions = {
-  autoIndex: false,
+  autoIndex: true,
 };
 
 if (DB_USER && DB_PASS) {
@@ -32,10 +34,10 @@ export class MongoHelper {
         if (response.length > 0) {
           return { isUserLogged: true, user: response[0] };
         }
-        return { isUserLogged: false };
+        throw new AuthenticationError(ErrorConstants.USER_NOT_AUTHORIZED);
       });
     } catch (error) {
-      return { isUserLogged: false };
+      throw new AuthenticationError(ErrorConstants.USER_NOT_AUTHORIZED);
     }
   }
 

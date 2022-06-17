@@ -6,6 +6,7 @@ const ReservationSchema = new Schema(
     bike: { type: Schema.Types.ObjectId, ref: "Bike" },
     start_date: { type: String, required: true },
     end_date: { type: String, required: true },
+    status: { type: String, required: true },
   },
   {
     timestamps: true,

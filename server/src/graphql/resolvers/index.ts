@@ -1,4 +1,5 @@
 import { AuthenticationError } from "apollo-server-express";
+import { ErrorConstants } from "../../constants/errors.constants";
 import {
   comparePassword,
   encryptPassword,
@@ -6,8 +7,8 @@ import {
 } from "../../helpers/authHelpers";
 import { User } from "../../models";
 import { bikeMutations, bikeQueries } from "./bikes";
-import { userMutations, userQueries } from "./users";
 import { reservationMutations, reservationQueries } from "./reservations";
+import { userMutations, userQueries } from "./users";
 
 const resolvers = {
   Query: {
@@ -15,7 +16,7 @@ const resolvers = {
       if (context.isUserLogged) {
         return context.user;
       } else {
-        throw new AuthenticationError("Please login tagain");
+        throw new AuthenticationError("Please login again");
       }
     },
     ...userQueries,
@@ -27,9 +28,7 @@ const resolvers = {
       try {
         const user = await User.findOne({ email: args.data.email });
         if (!user) {
-          return {
-            error: "User not found",
-          };
+          throw new AuthenticationError(ErrorConstants.USER_NOT_FOUND);
         }
         const isMatch = await comparePassword(
           args.data.password,
@@ -40,17 +39,17 @@ const resolvers = {
           const token = getToken(input);
           return { user, token };
         } else {
-          throw new AuthenticationError("Wrong Password");
+          throw new AuthenticationError(ErrorConstants.WRONG_PASSWORD);
         }
       } catch (error) {
-        console.log(error);
+        throw error;
       }
     },
     register: async (_: unknown, args: any) => {
       try {
         const user = await User.findOne({ email: args.data.email });
         if (user) {
-          throw new AuthenticationError("User already exists!");
+          throw new AuthenticationError(ErrorConstants.USER_EXISTED);
         }
         const password = await encryptPassword(args.data.password);
         const regUser = await User.create({

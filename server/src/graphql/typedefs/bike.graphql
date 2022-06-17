@@ -1,11 +1,9 @@
 type Bike {
-  id: ID!
+  _id: ID!
   model: String!
   color: String!
   location: String!
   rate: String!
-  reserved_user_id: String
-  reserved: Boolean!
   createdAt: String!
   updatedAt: String!
 }
@@ -29,15 +27,18 @@ input BikeInputFilter {
   color: String
   location: String
   rate: String
+  start_date: String
+  end_date: String
 }
 
 type Payload {
-  success: Boolean!
+  myBikes: [Bike]
+  availableBikes: [Bike]
 }
 
 type Query {
   bike(id: String!): Bike
-  bikes(input: BikeInputFilter): [Bike]
+  bikes(input: BikeInputFilter): Payload
 }
 
 type Mutation {

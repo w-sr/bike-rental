@@ -1,5 +1,7 @@
-import mongoose from "mongoose";
-import { Bike, Reservation } from "../models";
+import { ApolloError } from "apollo-server-errors";
+import { ErrorConstants } from "../constants/errors.constants";
+import { VerifyAuthorization } from "../decorators/auth.decorator";
+import { Reservation } from "../models";
 import { Context } from "../models/context";
 
 export class BikeController {
@@ -11,7 +13,7 @@ export class BikeController {
   }
 
   // @VerifyAuthorization
-  async getReservations(args: any, ctx: Context) {
+  async getReservations(args: any, ctx: any) {
     const { input: { user = "", bike = "" } = {} } = args;
     const query: any = {};
     if (user) {
@@ -29,26 +31,28 @@ export class BikeController {
         path: "user",
         model: "User",
       })
-      .then((reservations: any) => reservations);
+     .lean()
   }
 
   // @VerifyAuthorization
   async addReservation(args: any, ctx: any) {
-    await Bike.findOneAndUpdate(
-      { _id: new mongoose.Types.ObjectId(args.input.bike) },
-      { reserved: true, reserved_user_id: args.input.user }
-    );
-    return await Reservation.create(args.input).then(
+    if (ctx.user.role === "manager") {
+      throw new ApolloError(ErrorConstants.PERMISSION_DENIED);
+    }
+    return await Reservation.create({ ...args.input, status: "pending" }).then(
       (reservation: any) => reservation
     );
   }
 
+  // @VerifyAuthorization
   async cancelReservation(args: any, ctx: any) {
-    await Bike.findOneAndUpdate(
-      { _id: new mongoose.Types.ObjectId(args.id) },
-      { reserved: false, reserved_user_id: null }
-    );
-    return { success: true };
+    if (ctx.user.role === "manager") {
+      throw new ApolloError(ErrorConstants.PERMISSION_DENIED);
+    }
+    return await Reservation.findOneAndUpdate(
+      { user: args.user, bike: args.bike, status: "pending" },
+      { status: "completed" }
+    ).then((reservation: any) => reservation);
   }
 }
 
