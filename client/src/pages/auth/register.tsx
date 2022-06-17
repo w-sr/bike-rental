@@ -5,6 +5,8 @@ import * as Yup from "yup";
 import { styled } from "@mui/system";
 import { useMutation } from "@apollo/client";
 import { REGISTER } from "../../utils/mutations/auth";
+import { useState } from "react";
+import { parseErrorMessage } from "../../utils/common/helper";
 
 const StyledLink = styled(Link)({
   fontSize: "0.75rem",
@@ -19,33 +21,44 @@ const initialValues = {
 
 const Register = () => {
   const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const FormSchema = Yup.object().shape({
-    first_name: Yup.string().required("First name is required"),
-    last_name: Yup.string().required("Last name is required"),
+    first_name: Yup.string()
+      .required("First name is required")
+      .matches(/^[a-zA-Z]*$/, "Only alphabets are allowed for first name"),
+    last_name: Yup.string()
+      .required("Last name is required")
+      .matches(/^[a-zA-Z]*$/, "Only alphabets are allowed for last name"),
     email: Yup.string().email("Invalid Email").required("Email is required"),
     password: Yup.string()
       .required("Name is required")
       .min(8, "Password should be at least 8 letters"),
   });
 
-  const [registerUser] = useMutation(REGISTER);
+  const [registerUser] = useMutation(REGISTER, {
+    onCompleted: (res) => {
+      if (res.register) {
+        localStorage.setItem("token", res.register.token);
+        navigate("/bikes");
+      }
+    },
+    onError: (err) => {
+      setErrorMessage(parseErrorMessage(err));
+    },
+  });
 
   const formik = useFormik({
     initialValues,
     validationSchema: FormSchema,
     onSubmit: async (values) => {
-      const res = await registerUser({
+      registerUser({
         variables: {
           data: {
             ...values,
           },
         },
       });
-      if (res.data.register) {
-        localStorage.setItem("token", res.data.register.token);
-        navigate("/bikes");
-      }
     },
   });
 
@@ -63,6 +76,17 @@ const Register = () => {
       <Typography variant="h4" component="div" sx={{ marginBottom: 4 }}>
         Register
       </Typography>
+      <Box minHeight={30}>
+        {errorMessage && (
+          <Typography
+            variant="subtitle2"
+            sx={{ color: "red", marginBottom: 2 }}
+            textAlign="center"
+          >
+            {errorMessage}
+          </Typography>
+        )}
+      </Box>
       <form onSubmit={formik.handleSubmit}>
         <Box my={2}>
           <TextField
@@ -95,7 +119,10 @@ const Register = () => {
             name="email"
             label="Email"
             value={values.email}
-            onChange={(e) => setFieldValue("email", e.target.value)}
+            onChange={(e) => {
+              setErrorMessage("");
+              setFieldValue("email", e.target.value);
+            }}
             error={touched.email && Boolean(errors.email)}
             helperText={touched.email && errors.email}
           />

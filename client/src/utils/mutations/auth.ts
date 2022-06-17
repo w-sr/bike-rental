@@ -4,7 +4,7 @@ export const LOGIN = gql`
   mutation Login($data: LoginInput!) {
     login(data: $data) {
       user {
-        id
+        _id
         first_name
         last_name
         email
@@ -19,7 +19,7 @@ export const REGISTER = gql`
   mutation register($data: RegisterInput!) {
     register(data: $data) {
       user {
-        id
+        _id
         first_name
         last_name
         email

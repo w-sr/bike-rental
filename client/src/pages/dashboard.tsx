@@ -20,14 +20,14 @@ const Dashboard = () => {
 
   const rows = data?.reservations.map((d: Reservation) => {
     const { user, bike, ...r } = d;
-    const { id: bike_id, ...b } = bike;
-    const { id: user_id, ...u } = user;
-    return { ...b, ...u, ...r };
+    const { _id: bike_id, ...b } = bike;
+    const { _id: user_id, ...u } = user;
+    return { ...b, ...u, ...r, id: r._id };
   });
 
   const users = reservations?.reduce<User[]>(
     (res: User[], current: Reservation) => {
-      const x = res.find((item: User) => item.id === current.user.id);
+      const x = res.find((item: User) => item._id === current.user._id);
       if (!x) res.push(current.user);
       return res;
     },
@@ -36,7 +36,7 @@ const Dashboard = () => {
 
   const bikes = reservations?.reduce<Bike[]>(
     (res: Bike[], current: Reservation) => {
-      const x = res.find((item: Bike) => item.id === current.bike.id);
+      const x = res.find((item: Bike) => item._id === current.bike._id);
       if (!x) res.push(current.bike);
       return res;
     },
@@ -129,7 +129,7 @@ const Dashboard = () => {
               <em>None</em>
             </MenuItem>
             {bikes?.map((bike: Bike) => (
-              <MenuItem key={bike.id} value={bike.id}>
+              <MenuItem key={bike._id} value={bike._id}>
                 {bike.model}
               </MenuItem>
             ))}
@@ -149,7 +149,7 @@ const Dashboard = () => {
               <em>None</em>
             </MenuItem>
             {users?.map((user: User) => (
-              <MenuItem key={user.id} value={user.id}>
+              <MenuItem key={user._id} value={user._id}>
                 {user.first_name + " " + user.last_name}
               </MenuItem>
             ))}

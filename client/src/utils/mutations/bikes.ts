@@ -3,7 +3,7 @@ import { gql } from "@apollo/client";
 export const UPDATE_BIKE = gql`
   mutation UpdateBike($id: String!, $input: BikeUpdateInput!) {
     updateBike(input: $input, id: $id) {
-      id
+      _id
       model
       color
       location
@@ -16,7 +16,7 @@ export const UPDATE_BIKE = gql`
 export const CREATE_BIKE = gql`
   mutation CreateBike($input: BikeCreateInput!) {
     createBike(input: $input) {
-      id
+      _id
       model
       color
       location
@@ -29,7 +29,7 @@ export const CREATE_BIKE = gql`
 export const DELETE_BIKE = gql`
   mutation DeleteBike($id: String!) {
     deleteBike(id: $id) {
-      id
+      _id
     }
   }
 `;

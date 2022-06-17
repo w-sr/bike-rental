@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@apollo/client";
+import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import { Box, Button, Divider, TextField, Typography } from "@mui/material";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
@@ -12,36 +12,64 @@ import { useQueryMe } from "../../utils/quries/me";
 import { Bike } from "../../utils/type";
 import BikeModal from "./bikeModal";
 import ReserveModal from "./reserveModal";
+import CustomSnackbar, { CustomSnackbarProps } from "../../components/Snackbar";
+import { parseErrorMessage } from "../../utils/common/helper";
 
 export type ActionType = "add" | "update" | "reserve" | "cancel";
 
+const date = new Date();
+date.setDate(date.getDate() + 7);
+const initialEndDate = date;
+
 const Dashboard = () => {
+  const [snackBarDetails, setSnackBar] = useState<CustomSnackbarProps>({});
   const [isOpenReserveModal, setIsOpenReserveModal] = useState(false);
   const [isOpenBikeModal, setIsOpenBikeModal] = useState(false);
   const [type, setType] = useState<ActionType>("reserve");
   const [currentBike, setCurrentBike] = useState<Bike>();
   const [start, setStart] = useState<Date | null>(new Date());
-  const [end, setEnd] = useState<Date | null>(() => {
-    var date = new Date();
-    date.setDate(date.getDate() + 7);
-    return date;
-  });
+  const [end, setEnd] = useState<Date | null>(initialEndDate);
   const [filterModel, setFilterModel] = useState<Record<string, string>>({
     model: "",
     color: "",
     location: "",
     rate: "0",
+    start_date: new Date().toISOString().split("T")[0],
+    end_date: initialEndDate.toISOString().split("T")[0],
   });
 
   const { data: me } = useQueryMe();
-  const { data, refetch } = useQuery(GET_BIKES);
+  const { data, refetch } = useQuery(GET_BIKES, {
+    variables: {
+      filter: {
+        ...filterModel,
+      },
+    },
+  });
 
-  const bikes = data?.bikes;
-  const myBikes = data?.bikes.filter(
-    (bike: Bike) => bike.reserved_user_id === me?.id && bike.reserved
-  );
+  const availableBikes = data?.bikes.availableBikes;
+  const myBikes = data?.bikes.myBikes;
 
   const [removeBike] = useMutation(DELETE_BIKE, {
+    onCompleted: (res) => {
+      if (res.deleteBike._id) {
+        setSnackBar({
+          open: true,
+          message: "Successfully deleted",
+          onClose: () => setSnackBar({}),
+          severity: "success",
+        });
+      }
+    },
+    onError: (error) => {
+      const errorMessage = parseErrorMessage(error);
+      setSnackBar({
+        open: true,
+        message: errorMessage,
+        onClose: () => setSnackBar({}),
+        severity: "error",
+      });
+    },
     refetchQueries: [GET_BIKES],
   });
 
@@ -57,9 +85,23 @@ const Dashboard = () => {
 
   const handleStartChange = (newValue: Date | null) => {
     setStart(newValue);
+    if (newValue) {
+      const newFilter = { ...filterModel };
+      newFilter["start_date"] = newValue.toISOString().split("T")[0];
+      setFilterModel(newFilter);
+    }
+    if (newValue && end && newValue > end) {
+      setEnd(newValue);
+    }
   };
+
   const handleEndChange = (newValue: Date | null) => {
     setEnd(newValue);
+    if (newValue) {
+      const newFilter = { ...filterModel };
+      newFilter["end_date"] = newValue.toISOString().split("T")[0];
+      setFilterModel(newFilter);
+    }
   };
 
   const filterChange = (key: string, value: string) => {
@@ -69,15 +111,11 @@ const Dashboard = () => {
   };
 
   const remove = async (id: string) => {
-    try {
-      await removeBike({
-        variables: {
-          id,
-        },
-      });
-    } catch (error) {
-      console.log(error);
-    }
+    await removeBike({
+      variables: {
+        id,
+      },
+    });
   };
 
   return (
@@ -85,7 +123,6 @@ const Dashboard = () => {
       <Box sx={{ minWidth: 300 }}>
         <Filter filterChange={filterChange} model={filterModel} />
       </Box>
-
       {me?.role === "manager" ? (
         <Box sx={{ flex: 1 }}>
           <Box display="flex" justifyContent="space-between">
@@ -102,10 +139,11 @@ const Dashboard = () => {
           </Box>
           <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
           <Box sx={{ display: "flex", flexWrap: "wrap" }}>
-            {bikes &&
-              bikes.map((bike: Bike) => (
-                <Box m={2} key={bike.id}>
+            {availableBikes &&
+              availableBikes.map((bike: Bike) => (
+                <Box m={2} key={bike._id}>
                   <BikeCard
+                    type="available"
                     user={me}
                     bike={bike}
                     edit={() => {
@@ -113,7 +151,7 @@ const Dashboard = () => {
                       setType("update");
                       setCurrentBike(bike);
                     }}
-                    remove={() => remove(bike.id)}
+                    remove={() => remove(bike._id)}
                   />
                 </Box>
               ))}
@@ -127,8 +165,9 @@ const Dashboard = () => {
             <Box sx={{ display: "flex", flexWrap: "wrap" }}>
               {myBikes &&
                 myBikes.map((bike: Bike) => (
-                  <Box m={2} key={bike.id}>
+                  <Box m={2} key={bike._id}>
                     <BikeCard
+                      type="reserved"
                       user={me}
                       bike={bike}
                       cancelReserve={() => {
@@ -152,6 +191,7 @@ const Dashboard = () => {
                     label="Start Date"
                     inputFormat="MM/dd/yyyy"
                     value={start}
+                    minDate={new Date()}
                     onChange={handleStartChange}
                     renderInput={(params: any) => <TextField {...params} />}
                   />
@@ -163,6 +203,7 @@ const Dashboard = () => {
                     label="End Date"
                     inputFormat="MM/dd/yyyy"
                     value={end}
+                    minDate={start ?? new Date()}
                     onChange={handleEndChange}
                     renderInput={(params: any) => <TextField {...params} />}
                   />
@@ -171,34 +212,31 @@ const Dashboard = () => {
             </Box>
 
             <Box sx={{ display: "flex", flexWrap: "wrap" }}>
-              {bikes &&
-                bikes
-                  .filter((bike: Bike) => !bike.reserved)
-                  .map((bike: Bike) => (
-                    <Box m={2} key={bike.id}>
-                      <BikeCard
-                        user={me}
-                        bike={bike}
-                        reserve={() => {
-                          setIsOpenReserveModal(true);
-                          setType("reserve");
-                          setCurrentBike(bike);
-                        }}
-                      />
-                    </Box>
-                  ))}
+              {availableBikes &&
+                availableBikes.map((bike: Bike) => (
+                  <Box m={2} key={bike._id}>
+                    <BikeCard
+                      type="available"
+                      user={me}
+                      bike={bike}
+                      reserve={() => {
+                        setIsOpenReserveModal(true);
+                        setType("reserve");
+                        setCurrentBike(bike);
+                      }}
+                    />
+                  </Box>
+                ))}
             </Box>
           </Box>
         </Box>
       )}
-
       <ReserveModal
         type={type}
         open={isOpenReserveModal}
         onClose={() => setIsOpenReserveModal(false)}
-        bikeId={currentBike?.id}
+        bikeId={currentBike?._id}
       />
-
       <BikeModal
         type={type}
         open={isOpenBikeModal}
@@ -207,6 +245,11 @@ const Dashboard = () => {
           setCurrentBike(undefined);
         }}
         bike={currentBike}
+      />
+      <CustomSnackbar
+        {...snackBarDetails}
+        onClose={() => setSnackBar({ open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       />
     </Box>
   );

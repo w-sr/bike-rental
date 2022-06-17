@@ -12,6 +12,7 @@ import Rating from "@mui/material/Rating";
 import { Bike, User } from "../utils/type";
 
 type BikeCardProps = {
+  type: string;
   bike: Bike;
   user?: User;
   edit?: () => void;
@@ -21,6 +22,7 @@ type BikeCardProps = {
 };
 
 const BikeCard = ({
+  type,
   bike,
   user,
   edit,
@@ -52,11 +54,13 @@ const BikeCard = ({
               <IconButton
                 aria-label="reserve"
                 onClick={reserve}
-                disabled={bike.reserved}
+                disabled={type === "reserved"}
               >
-                <BookmarkIcon color={bike.reserved ? "success" : undefined} />
+                <BookmarkIcon
+                  color={type === "reserved" ? "success" : undefined}
+                />
               </IconButton>
-              {bike.reserved && (
+              {type === "reserved" && (
                 <IconButton aria-label="cancel-reserve" onClick={cancelReserve}>
                   <CancelIcon />
                 </IconButton>

@@ -4,7 +4,7 @@
   "description": "Bike rental app client",
   "private": true,
   "dependencies": {
-    "@apollo/client": "^3.6.7",
+    "@apollo/client": "^3.5.9",
     "@date-io/date-fns": "^2.14.0",
     "@emotion/react": "^11.9.3",
     "@emotion/styled": "^11.9.3",

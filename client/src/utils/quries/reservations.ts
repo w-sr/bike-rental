@@ -4,24 +4,24 @@ import { Reservation, QueryHookResult } from "../type";
 export const GET_RESERVATIONS = gql`
   query getReservations($filter: ReservationInputFilter) {
     reservations(input: $filter) {
-      id
+      _id
       user {
-        id
+        _id
         first_name
         last_name
         email
         role
       }
       bike {
-        id
+        _id
         model
         color
         location
         rate
-        reserved
       }
       start_date
       end_date
+      status
     }
   }
 `;
@@ -29,24 +29,24 @@ export const GET_RESERVATIONS = gql`
 export const GET_RESERVATION = gql`
   query getReservation {
     reservation {
-      id
+      _id
       user {
-        id
+        _id
         first_name
         last_name
         email
         role
       }
       bike {
-        id
+        _id
         model
         color
         location
         rate
-        reserved
       }
       start_date
       end_date
+      status
     }
   }
 `;

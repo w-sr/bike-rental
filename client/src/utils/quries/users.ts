@@ -4,7 +4,7 @@ import { QueryHookResult, User } from "../type";
 export const GET_USERS = gql`
   query getUsers {
     users {
-      id
+      _id
       first_name
       last_name
       email

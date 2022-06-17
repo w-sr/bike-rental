@@ -4,7 +4,7 @@ import { QueryHookResult, User } from "../type";
 export const ME_QUERY = gql`
   query MeQuery {
     me {
-      id
+      _id
       first_name
       last_name
       email

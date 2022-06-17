@@ -5,7 +5,7 @@ export type QueryHookResult<T> = {
 };
 
 export type User = {
-  id: string;
+  _id: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -13,19 +13,18 @@ export type User = {
 };
 
 export type Bike = {
-  id: string;
+  _id: string;
   model: string;
   color: string;
   location: string;
   rate: string;
-  reserved: boolean;
-  reserved_user_id: string;
 };
 
 export type Reservation = {
-  id: string;
+  _id: string;
   user: User;
   bike: Bike;
   start_date: string;
   end_date: string;
+  status: string;
 };
