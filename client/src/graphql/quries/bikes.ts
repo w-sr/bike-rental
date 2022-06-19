@@ -4,23 +4,29 @@ import { Bike, QueryHookResult } from "../type";
 export const GET_BIKES = gql`
   query getBikes($filter: BikeInputFilter) {
     bikes(filters: $filter) {
-      _id
-      model
-      color
-      location
-      rate
+      items {
+        _id
+        model
+        color
+        location
+        rate
+      }
+      count
     }
   }
 `;
 
 export const GET_BIKE = gql`
-  query getBike {
-    bike {
-      _id
-      model
-      color
-      location
-      rate
+  query getBike($input: BikeInput!) {
+    bike(input: $input) {
+      bike {
+        _id
+        model
+        color
+        location
+        rate
+      }
+      available
     }
   }
 `;

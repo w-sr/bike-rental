@@ -9,12 +9,36 @@ export class BikeController {
   /**
    * Get a bike by id
    */
-  getBike(args: any, ctx: any) {
-    if (args._id) {
+  async getBike(args: any, ctx: any) {
+    if (!args.input.id) {
       throw new ApolloError(ErrorConstants.BAD_REQUEST);
     }
-    const result = Bike.findById(args._id);
-    return result;
+    const { input: { start_date = "", end_date = "" } = {} } = args;
+    const query: any = [
+      { bike: { $eq: new mongoose.Types.ObjectId(args.input.id) } },
+      { status: { $eq: ReserveStatus.Pending } },
+      {
+        $or: [
+          {
+            $and: [
+              { start_date: { $gte: start_date } },
+              { start_date: { $lte: end_date } },
+            ],
+          },
+          {
+            $and: [
+              { end_date: { $gte: start_date } },
+              { end_date: { $lte: end_date } },
+            ],
+          },
+        ],
+      },
+    ];
+
+    const reservation = await Reservation.find({ $and: query });
+    const available = reservation.length === 0;
+    const result = await Bike.findById(args.input.id);
+    return { bike: result, available: available };
   }
 
   /**
@@ -32,6 +56,7 @@ export class BikeController {
         user = "",
       } = {},
     } = args;
+    const { page, pageSize } = args.filters;
     const query: any = { deleted: { $eq: false } };
 
     if (model) {
@@ -102,8 +127,13 @@ export class BikeController {
       }
     }
 
-    const bikes = await Bike.find(query).lean();
-    return bikes;
+    const count = await Bike.find(query).count();
+
+    const items = await Bike.find(query)
+      .skip((page - 1) * pageSize)
+      .limit(+pageSize);
+
+    return { items, count } as any;
   }
 
   /**

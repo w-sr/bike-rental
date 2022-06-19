@@ -22,12 +22,17 @@ const UserHistory = () => {
     },
   });
 
-  const rows = data?.reservations.items.map((d: Reservation) => {
-    const { user, bike, ...r } = d;
-    const { _id: bike_id, ...b } = bike;
-    const { _id: user_id, ...u } = user;
-    return { ...b, ...u, ...r, id: r._id };
-  });
+  const rows = useMemo(
+    () =>
+      data?.reservations.items.map((d: Reservation) => {
+        const { user, bike, ...r } = d;
+        const { _id: bike_id, ...b } = bike;
+        const { _id: user_id, ...u } = user;
+        return { ...b, ...u, ...r, id: r._id };
+      }),
+    [data]
+  );
+  const total = useMemo(() => data?.reservations.count, [data]);
 
   useEffect(() => {
     if (refetch) {
@@ -80,6 +85,7 @@ const UserHistory = () => {
   return (
     <Box flexGrow={1} mx={5} mt={5}>
       <ReservationHistory
+        total={total}
         columns={columns}
         rows={rows}
         name="user"

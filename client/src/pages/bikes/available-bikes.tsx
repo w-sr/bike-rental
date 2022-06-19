@@ -31,6 +31,8 @@ const AvailableBikesPage = () => {
   const [currentBike, setCurrentBike] = useState<Bike>();
   const [start, setStart] = useState<Date | null>(new Date());
   const [end, setEnd] = useState<Date | null>(initialEndDate);
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [filterModel, setFilterModel] = useState<Record<string, string>>({
     model: "",
     color: "",
@@ -44,21 +46,28 @@ const AvailableBikesPage = () => {
     variables: {
       filter: {
         ...filterModel,
+        page,
+        pageSize,
       },
     },
   });
 
-  const bikes = useMemo(() => data?.bikes || [], [data]);
+  const { bikes, total } = useMemo(
+    () => ({ bikes: data?.bikes.items, total: data?.bikes.count ?? 0 }),
+    [data]
+  );
 
   useEffect(() => {
     if (refetch) {
       refetch({
         filter: {
           ...filterModel,
+          page,
+          pageSize,
         },
       });
     }
-  }, [filterModel, refetch]);
+  }, [filterModel, refetch, page, pageSize]);
 
   const handleStartChange = useCallback(
     (newValue: Date | null) => {
@@ -201,6 +210,7 @@ const AvailableBikesPage = () => {
           <CircularProgress />
         ) : (
           <DataGrid
+            rowCount={total}
             rows={
               bikes?.map((bike: Bike) => ({
                 ...bike,
@@ -210,6 +220,8 @@ const AvailableBikesPage = () => {
             columns={columns}
             pageSize={10}
             rowsPerPageOptions={[10]}
+            onPageChange={(res, _) => setPage(res)}
+            onPageSizeChange={(res, _) => setPageSize(res)}
             disableSelectionOnClick
           />
         )}

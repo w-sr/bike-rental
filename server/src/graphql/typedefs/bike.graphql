@@ -21,6 +21,12 @@ input BikeUpdateInput {
   reserved: Boolean
 }
 
+input BikeInput {
+  id: String
+  start_date: String
+  end_date: String
+}
+
 input BikeInputFilter {
   user: String
   model: String
@@ -29,11 +35,23 @@ input BikeInputFilter {
   rate: String
   start_date: String
   end_date: String
+  page: Int!
+  pageSize: Int!
+}
+
+type BikePayload {
+  bike: Bike
+  available: Boolean
+}
+
+type BikesPayload {
+  items: [Bike]
+  count: Int
 }
 
 type Query {
-  bike(id: String!): Bike
-  bikes(filters: BikeInputFilter): [Bike]
+  bike(input: BikeInput!): BikePayload
+  bikes(filters: BikeInputFilter): BikesPayload
 }
 
 type Mutation {

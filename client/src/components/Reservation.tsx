@@ -8,6 +8,7 @@ type ReservationProps = {
   name: string;
   columns: GridColDef[];
   rows: any[];
+  total: number;
   handlePageChange: (page: number, details: any) => void;
   handlePageSizeChange: (page: number, details: any) => void;
 };
@@ -15,6 +16,7 @@ type ReservationProps = {
 const Reservation = ({
   columns,
   rows,
+  total,
   name,
   handlePageChange,
   handlePageSizeChange,
@@ -37,6 +39,7 @@ const Reservation = ({
 
       <Box sx={{ height: 650, flexGrow: 1 }}>
         <DataGrid
+          rowCount={total}
           rows={rows || []}
           columns={columns}
           pageSize={10}

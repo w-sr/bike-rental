@@ -1,4 +1,4 @@
-import { useMutation } from "@apollo/client";
+import { useLazyQuery, useMutation } from "@apollo/client";
 import {
   Box,
   Button,
@@ -16,7 +16,7 @@ import * as Yup from "yup";
 import CustomSnackbar, { CustomSnackbarProps } from "../../components/Snackbar";
 import { parseErrorMessage } from "../../graphql/helper";
 import { CREATE_BIKE, UPDATE_BIKE } from "../../graphql/mutations/bikes";
-import { GET_BIKES } from "../../graphql/quries/bikes";
+import { GET_BIKE, GET_BIKES } from "../../graphql/quries/bikes";
 import { Bike } from "../../graphql/type";
 
 type Props = {
@@ -24,6 +24,8 @@ type Props = {
   open: boolean;
   type: string;
   bike?: Bike;
+  startDate?: string;
+  endDate?: string;
 };
 
 const initialValues = {
@@ -31,7 +33,6 @@ const initialValues = {
   color: "",
   location: "",
   rate: "0",
-  reserved: false,
 };
 
 const FormSchema = Yup.object().shape({
@@ -47,7 +48,14 @@ const FormSchema = Yup.object().shape({
     .matches(/^[aA-zZ \s]+$/, "Only alphabets are allowed for location"),
 });
 
-const BikeModal = ({ onClose, open, type, bike }: Props) => {
+const BikeModal = ({
+  onClose,
+  open,
+  type,
+  bike,
+  startDate,
+  endDate,
+}: Props) => {
   const [snackBarDetails, setSnackBar] = useState<CustomSnackbarProps>({});
 
   const formik = useFormik({
@@ -79,6 +87,9 @@ const BikeModal = ({ onClose, open, type, bike }: Props) => {
 
   const { values, setFieldValue, touched, errors } = formik;
 
+  const [getBike, { data }] = useLazyQuery(GET_BIKE);
+
+  console.log(data);
   const [updateBike] = useMutation(UPDATE_BIKE, {
     onCompleted: (res) => {
       if (res.updateBike) {
@@ -134,6 +145,20 @@ const BikeModal = ({ onClose, open, type, bike }: Props) => {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bike]);
+
+  useEffect(() => {
+    if (open && type === "update") {
+      getBike({
+        variables: {
+          input: {
+            id: bike?._id,
+            start_date: startDate,
+            end_date: endDate,
+          },
+        },
+      });
+    }
+  }, [open, startDate, endDate, getBike, bike, type]);
 
   const resetForm = () => formik.resetForm();
 
@@ -198,11 +223,11 @@ const BikeModal = ({ onClose, open, type, bike }: Props) => {
                 <FormGroup>
                   <FormControlLabel
                     disabled
-                    control={<Checkbox checked={true} />}
+                    control={<Checkbox checked={data?.bike.available} />}
                     label={
-                      // type === "available"
-                      "Available for rental"
-                      // : "Unavailable for rental"
+                      data?.bike.available
+                        ? "Available for rental"
+                        : "Unavailable for rental"
                     }
                   />
                 </FormGroup>

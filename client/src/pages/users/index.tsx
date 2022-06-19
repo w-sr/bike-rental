@@ -39,7 +39,10 @@ const UserPage = () => {
     },
   });
 
-  const users = useMemo(() => data?.users.items, [data]);
+  const { users, total } = useMemo(
+    () => ({ users: data?.users.items, total: data?.users.count ?? 0 }),
+    [data]
+  );
 
   const [deleteUser] = useMutation(DELETE_USER, {
     onCompleted: (res) => {
@@ -185,6 +188,7 @@ const UserPage = () => {
           <CircularProgress />
         ) : (
           <DataGrid
+            rowCount={total}
             rows={users?.map((user: User) => ({ ...user, id: user._id })) || []}
             columns={columns}
             pageSize={10}

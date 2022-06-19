@@ -41,6 +41,8 @@ const BikesPage = () => {
   const [currentBike, setCurrentBike] = useState<Bike>();
   const [start, setStart] = useState<Date | null>(new Date());
   const [end, setEnd] = useState<Date | null>(initialEndDate);
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [filterModel, setFilterModel] = useState<Record<string, string>>({
     model: "",
     color: "",
@@ -56,11 +58,16 @@ const BikesPage = () => {
       filter: {
         ...filterModel,
         user: me?._id,
+        page,
+        pageSize,
       },
     },
   });
 
-  const bikes = useMemo(() => data?.bikes || [], [data]);
+  const { bikes, total } = useMemo(
+    () => ({ bikes: data?.bikes.items, total: data?.bikes.count ?? 0 }),
+    [data]
+  );
 
   const [deleteBike] = useMutation(DELETE_BIKE, {
     onCompleted: (res) => {
@@ -92,10 +99,12 @@ const BikesPage = () => {
         filter: {
           ...filterModel,
           user: me?._id,
+          page,
+          pageSize,
         },
       });
     }
-  }, [filterModel, refetch, me]);
+  }, [filterModel, refetch, me, page, pageSize]);
 
   const handleStartChange = useCallback(
     (newValue: Date | null) => {
@@ -292,6 +301,7 @@ const BikesPage = () => {
           <CircularProgress />
         ) : (
           <DataGrid
+            rowCount={total}
             rows={
               bikes?.map((bike: Bike) => ({
                 ...bike,
@@ -301,6 +311,8 @@ const BikesPage = () => {
             columns={columns}
             pageSize={10}
             rowsPerPageOptions={[10]}
+            onPageChange={(res, _) => setPage(res)}
+            onPageSizeChange={(res, _) => setPageSize(res)}
             disableSelectionOnClick
           />
         )}
@@ -321,6 +333,8 @@ const BikesPage = () => {
           setCurrentBike(undefined);
         }}
         bike={currentBike}
+        startDate={start?.toISOString().split("T")[0]}
+        endDate={end?.toISOString().split("T")[0]}
       />
       <ConfirmModal
         title={"Are you sure to delete this bike?"}

@@ -22,12 +22,17 @@ const BikeHistory = () => {
     },
   });
 
-  const rows = data?.reservations.items.map((d: Reservation) => {
-    const { user, bike, ...r } = d;
-    const { _id: bike_id, ...b } = bike;
-    const { _id: user_id, ...u } = user;
-    return { ...b, ...u, ...r, id: r._id };
-  });
+  const rows = useMemo(
+    () =>
+      data?.reservations.items.map((d: Reservation) => {
+        const { user, bike, ...r } = d;
+        const { _id: bike_id, ...b } = bike;
+        const { _id: user_id, ...u } = user;
+        return { ...b, ...u, ...r, id: r._id };
+      }),
+    [data]
+  );
+  const total = useMemo(() => data?.reservations.count, [data]);
 
   useEffect(() => {
     if (refetch) {
@@ -82,6 +87,7 @@ const BikeHistory = () => {
       <ReservationHistory
         columns={columns}
         rows={rows}
+        total={total}
         name="bike"
         handlePageChange={(res, _) => setPage(res)}
         handlePageSizeChange={(res, _) => setPageSize(res)}
