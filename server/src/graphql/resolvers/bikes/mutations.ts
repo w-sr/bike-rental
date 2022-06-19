@@ -1,16 +1,15 @@
 import BikeController from "../../../controllers/bikes.controller";
-import { Context } from "../../../models/context";
 
 const bikeController = new BikeController();
 
 const bikeMutations = {
-  createBike: async (_: unknown, args: any, ctx: Context) => {
+  createBike: async (_: unknown, args: any, ctx: any) => {
     return bikeController.addBike(args, ctx);
   },
-  updateBike: async (_: unknown, args: any, ctx: Context) => {
+  updateBike: async (_: unknown, args: any, ctx: any) => {
     return bikeController.updateBike(args, ctx);
   },
-  deleteBike: async (_: unknown, args: any, ctx: Context) => {
+  deleteBike: async (_: unknown, args: any, ctx: any) => {
     return bikeController.deleteBike(args, ctx);
   },
 };

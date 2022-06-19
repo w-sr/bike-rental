@@ -11,7 +11,7 @@ const start = async () => {
       app,
       path: "/graphql",
     });
-    app.listen(PORT, "192.168.10.220");
+    app.listen(PORT);
     console.log(`GraphQL server running at port: ${PORT}`);
   } catch {
     console.log("Not able to run GraphQL server");

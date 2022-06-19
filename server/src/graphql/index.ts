@@ -1,24 +1,17 @@
 import { ApolloServer } from "apollo-server-express";
 import { ErrorConstants } from "../constants/errors.constants";
-import { MongoHelper } from "../helpers/mongoHelpers";
+import { MongoHelper } from "../helpers/mongo.helpers";
 import schema from "./schema";
+import { validateUser } from "../middlewares/auth.middleware";
 
 const mHelper = new MongoHelper();
 
 mHelper.connectDB();
 
-// const handleDuplicateField = (err) => {
-//   let message;
-//   const keys = Object.keys(err.keyValue);
-//   if (keys.includes("email")) message = "User already exists";
-//   return message;
-// };
-
 const setHttpPlugin = {
   async requestDidStart() {
     return {
       async willSendResponse({ response }: any) {
-        console.log("response?.errors?.[0]", response?.errors?.[0]);
         if (
           response?.errors?.[0]?.message ===
             ErrorConstants.USER_NOT_AUTHORIZED ||
@@ -45,7 +38,7 @@ const apolloServer = new ApolloServer({
   introspection: true,
   context: async ({ req }) => {
     if (!req.body.query.match("login") && !req.body.query.match("register")) {
-      return await mHelper.validateUser(req);
+      return await validateUser(req);
     }
   },
   plugins: [setHttpPlugin],

@@ -1,24 +1,12 @@
-import UserControleer from "../../../controllers/users.controller";
-import { GraphQLResolveInfo } from "graphql";
-import { Context } from "../../../models/context";
+import UserController from "../../../controllers/users.controller";
 
-const userController = new UserControleer();
+const userController = new UserController();
 
 const usersQueries = {
-  users: async (
-    _: unknown,
-    args: any,
-    ctx: Context,
-    _info: GraphQLResolveInfo
-  ) => {
+  users: async (_: unknown, args: any, ctx: any) => {
     return userController.getUsers(args, ctx);
   },
-  user: async (
-    _: unknown,
-    args: { id: "Uuid" },
-    ctx: Context,
-    _info: GraphQLResolveInfo
-  ) => {
+  user: async (_: unknown, args: { id: "Uuid" }, ctx: any) => {
     return userController.getUser(args, ctx);
   },
 };

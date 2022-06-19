@@ -34,21 +34,35 @@ input RegisterInput {
   password: String!
 }
 
+input UserFilterInput {
+  first_name: String
+  last_name: String
+  role: String
+  email: String
+  page: Int!
+  pageSize: Int!
+}
+
 type AuthPayload {
   user: User
   token: String
 }
 
+type UserPayload {
+  items: [User]
+  count: Int
+}
+
 type Query {
   me: User
-  user(id: String!): User
-  users: [User]
+  user(_id: String!): User
+  users(filters: UserFilterInput): UserPayload
 }
 
 type Mutation {
   login(data: LoginInput!): AuthPayload
   register(data: RegisterInput!): AuthPayload
   createUser(input: UserCreateInput!): User
-  deleteUser(id: String!): User
-  updateUser(id: String!, input: UserUpdateInput): User
+  deleteUser(_id: String!): User
+  updateUser(_id: String!, input: UserUpdateInput): User
 }

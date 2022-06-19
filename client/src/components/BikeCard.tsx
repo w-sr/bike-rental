@@ -9,7 +9,9 @@ import CardHeader from "@mui/material/CardHeader";
 import CardMedia from "@mui/material/CardMedia";
 import IconButton from "@mui/material/IconButton";
 import Rating from "@mui/material/Rating";
-import { Bike, User } from "../utils/type";
+import Tooltip from "@mui/material/Tooltip";
+import { Bike, User } from "../graphql/type";
+import { UserRole } from "../utils/type";
 
 type BikeCardProps = {
   type: string;
@@ -31,14 +33,9 @@ const BikeCard = ({
   cancelReserve,
 }: BikeCardProps) => {
   return (
-    <Card sx={{ maxWidth: 300, boxShadow: 3 }}>
+    <Card sx={{ maxWidth: 250, boxShadow: 3 }}>
       <CardHeader title={bike?.model} subheader={bike?.location} />
-      <CardMedia
-        component="img"
-        height="194"
-        image="/img/bike.jpeg"
-        alt="Paella dish"
-      />
+      <CardMedia component="img" image="/img/bike.jpeg" alt="Paella dish" />
       <CardActions
         disableSpacing
         sx={{ justifyContent: "space-between", marginTop: 2 }}
@@ -49,32 +46,45 @@ const BikeCard = ({
           readOnly
         />
         <Box>
-          {user?.role === "user" && (
+          {user?.role === UserRole.User && (
             <>
-              <IconButton
-                aria-label="reserve"
-                onClick={reserve}
-                disabled={type === "reserved"}
-              >
-                <BookmarkIcon
-                  color={type === "reserved" ? "success" : undefined}
-                />
-              </IconButton>
+              <Tooltip title="Reserve">
+                <span>
+                  <IconButton
+                    aria-label="reserve"
+                    onClick={reserve}
+                    disabled={type === "reserved"}
+                  >
+                    <BookmarkIcon
+                      color={type === "reserved" ? "success" : undefined}
+                    />
+                  </IconButton>
+                </span>
+              </Tooltip>
               {type === "reserved" && (
-                <IconButton aria-label="cancel-reserve" onClick={cancelReserve}>
-                  <CancelIcon />
-                </IconButton>
+                <Tooltip title="Cancel Reservation">
+                  <IconButton
+                    aria-label="cancel-reserve"
+                    onClick={cancelReserve}
+                  >
+                    <CancelIcon />
+                  </IconButton>
+                </Tooltip>
               )}
             </>
           )}
-          {user?.role === "manager" && (
+          {user?.role === UserRole.Manager && (
             <>
-              <IconButton aria-label="edit" onClick={edit}>
-                <EditIcon />
-              </IconButton>
-              <IconButton aria-label="delete" onClick={remove}>
-                <DeleteIcon />
-              </IconButton>
+              <Tooltip title="Edit Bike">
+                <IconButton aria-label="edit" onClick={edit}>
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Delete Bike">
+                <IconButton aria-label="delete" onClick={remove}>
+                  <DeleteIcon />
+                </IconButton>
+              </Tooltip>
             </>
           )}
         </Box>

@@ -1,16 +1,15 @@
 import UserController from "../../../controllers/users.controller";
-import { Context } from "../../../models/context";
 
 const userController = new UserController();
 
 const userMutations = {
-  createUser: async (_: unknown, args: any, ctx: Context) => {
+  createUser: async (_: unknown, args: any, ctx: any) => {
     return userController.addUser(args, ctx);
   },
-  updateUser: async (_: unknown, args: any, ctx: Context) => {
+  updateUser: async (_: unknown, args: any, ctx: any) => {
     return userController.updateUser(args, ctx);
   },
-  deleteUser: async (_: unknown, args: any, ctx: Context) => {
+  deleteUser: async (_: unknown, args: any, ctx: any) => {
     return userController.deleteUser(args, ctx);
   },
 };

@@ -1,24 +1,12 @@
-import ReservationsController from "../../../controllers/reservations.controller";
-import { GraphQLResolveInfo } from "graphql";
-import { Context } from "../../../models/context";
+import ReservationController from "../../../controllers/reservations.controller";
 
-const reservationController = new ReservationsController();
+const reservationController = new ReservationController();
 
 const reservationQueries = {
-  reservations: async (
-    _: unknown,
-    args: any,
-    ctx: Context,
-    _info: GraphQLResolveInfo
-  ) => {
+  reservations: async (_: unknown, args: any, ctx: any) => {
     return reservationController.getReservations(args, ctx);
   },
-  reservation: async (
-    _: unknown,
-    args: { id: "Uuid" },
-    ctx: Context,
-    _info: GraphQLResolveInfo
-  ) => {
+  reservation: async (_: unknown, args: { id: "Uuid" }, ctx: any) => {
     return reservationController.getReservation(args, ctx);
   },
 };

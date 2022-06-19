@@ -1,16 +1,12 @@
 import { Box, Button, TextField, Typography } from "@mui/material";
 import { useFormik } from "formik";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
-import { styled } from "@mui/system";
 import { useMutation } from "@apollo/client";
-import { REGISTER } from "../../utils/mutations/auth";
+import { REGISTER } from "../../graphql/mutations/auth";
 import { useState } from "react";
-import { parseErrorMessage } from "../../utils/common/helper";
-
-const StyledLink = styled(Link)({
-  fontSize: "0.75rem",
-});
+import { parseErrorMessage } from "../../graphql/helper";
+import { StyledLink } from "./styled";
 
 const initialValues = {
   first_name: "",
@@ -26,13 +22,17 @@ const Register = () => {
   const FormSchema = Yup.object().shape({
     first_name: Yup.string()
       .required("First name is required")
+      .min(2, "Please input valid name")
+      .max(35, "Please input valid name")
       .matches(/^[a-zA-Z]*$/, "Only alphabets are allowed for first name"),
     last_name: Yup.string()
       .required("Last name is required")
+      .min(2, "Please input valid name")
+      .max(35, "Please input valid name")
       .matches(/^[a-zA-Z]*$/, "Only alphabets are allowed for last name"),
     email: Yup.string().email("Invalid Email").required("Email is required"),
     password: Yup.string()
-      .required("Name is required")
+      .required("Password is required")
       .min(8, "Password should be at least 8 letters"),
   });
 

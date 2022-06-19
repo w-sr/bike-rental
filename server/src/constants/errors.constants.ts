@@ -1,9 +1,14 @@
-export class ErrorConstants {
-  public static readonly USER_NOT_AUTHORIZED =
-    "You are not Authorized to access this API !!";
-  public static readonly WRONG_PASSWORD = "Wrong Password";
-  public static readonly USER_NOT_FOUND = "User not found";
-  public static readonly USER_EXISTED = "User already exists!";
-  public static readonly PERMISSION_DENIED = "Permission denied!";
-  public static readonly TRY_AGAIN = "Please login again!";
+export enum ErrorConstants {
+  USER_NOT_AUTHORIZED = "You are not authorized to access this API.",
+  WRONG_PASSWORD = "You entered wrong password.",
+  USER_NOT_FOUND = "This user doesn't exist.",
+  USER_EXISTED = "This user already exists, please enter different email.",
+  PERMISSION_DENIED = "Permission Denied.",
+  TRY_AGAIN = "Please login again.",
+  BAD_ROLE_INPUT = "Bad role input",
+  BAD_RATE_INPUT = "Bad rate input",
+  ALREADY_RESERVED = "This bike was already reserved by another user",
+  BAD_END_DATE = "End date should be greater than start date.",
+  BAD_START_DATE = "Start date should be greater than today.",
+  BAD_REQUEST = "Bad request",
 }

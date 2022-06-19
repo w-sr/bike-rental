@@ -1,9 +1,9 @@
 import { ApolloProvider } from "@apollo/client";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import client from "./utils/ApiClient";
 import { BrowserRouter } from "react-router-dom";
 import "./App.css";
-import routes, { renderRoutes } from "./routes";
+import client from "./graphql/ApiClient";
+import { renderRoutes } from "./routes/routes";
 
 const theme = createTheme({
   palette: {
@@ -17,7 +17,7 @@ function App() {
   return (
     <ApolloProvider client={client}>
       <ThemeProvider theme={theme}>
-        <BrowserRouter>{renderRoutes(routes)}</BrowserRouter>
+        <BrowserRouter>{renderRoutes()}</BrowserRouter>
       </ThemeProvider>
     </ApolloProvider>
   );

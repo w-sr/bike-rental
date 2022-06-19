@@ -18,11 +18,11 @@ input BikeUpdateInput {
   model: String
   color: String
   location: String
-  rate: String
   reserved: Boolean
 }
 
 input BikeInputFilter {
+  user: String
   model: String
   color: String
   location: String
@@ -31,18 +31,13 @@ input BikeInputFilter {
   end_date: String
 }
 
-type Payload {
-  myBikes: [Bike]
-  availableBikes: [Bike]
-}
-
 type Query {
   bike(id: String!): Bike
-  bikes(input: BikeInputFilter): Payload
+  bikes(filters: BikeInputFilter): [Bike]
 }
 
 type Mutation {
   createBike(input: BikeCreateInput!): Bike
-  deleteBike(id: String!): Bike
-  updateBike(id: String!, input: BikeUpdateInput): Bike
+  deleteBike(_id: String!): Bike
+  updateBike(_id: String!, input: BikeUpdateInput): Bike
 }

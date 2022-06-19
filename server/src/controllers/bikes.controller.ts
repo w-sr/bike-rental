@@ -1,194 +1,173 @@
 import { ApolloError } from "apollo-server-errors";
 import mongoose from "mongoose";
+import { ReserveStatus, UserRole } from "../constants/common.constants";
 import { ErrorConstants } from "../constants/errors.constants";
+import { VerifyManager } from "../decorators/auth.decorator";
 import { Bike, Reservation } from "../models";
-import { Context } from "../models/context";
-import { VerifyAuthorization } from "../decorators/auth.decorator";
 
 export class BikeController {
-  // @VerifyAuthorization
-  async getBike(args: any, ctx: Context) {
-    return Bike.find({ id: args["id"] }).then((bikes: any) => bikes[0]);
+  /**
+   * Get a bike by id
+   */
+  getBike(args: any, ctx: any) {
+    if (args._id) {
+      throw new ApolloError(ErrorConstants.BAD_REQUEST);
+    }
+    const result = Bike.findById(args._id);
+    return result;
   }
 
-  // @VerifyAuthorization
+  /**
+   * Get all bikes
+   */
   async getBikes(args: any, ctx: any) {
     const {
-      input: {
+      filters: {
         model = "",
         color = "",
         location = "",
         rate = "",
         start_date = "",
         end_date = "",
+        user = "",
       } = {},
     } = args;
     const query: any = { deleted: { $eq: false } };
 
     if (model) {
       query.model = {
-        $regex: new RegExp(model, "g"),
+        $regex: new RegExp(model, "i"),
       };
     }
     if (color) {
-      query.color = color;
+      query.color = {
+        $regex: new RegExp(color, "i"),
+      };
     }
     if (location) {
-      query.location = location;
+      query.location = {
+        $regex: new RegExp(location, "i"),
+      };
     }
     if (rate) {
       query.rate = {
         $gte: parseInt(rate),
       };
+      if (parseFloat(rate) > 5.0) {
+        throw new ApolloError(ErrorConstants.BAD_RATE_INPUT);
+      }
     }
-    if (ctx.user.role === "user") {
-      const reservations = await Reservation.find()
-        .populate({
-          path: "bike",
-          model: "Bike",
-        })
-        .populate({
-          path: "user",
-          model: "User",
-        })
-        .lean();
-      const bikes = await Bike.find(query).lean();
-      const myBikes = reservations.reduce((sum: any, current: any) => {
-        if (
-          current.user.email === ctx.user.email &&
-          current.status === "pending"
-        ) {
-          sum.push(current.bike);
-        }
-        return sum;
-      }, []);
-      const availableBikes = bikes.filter((bike: any) => {
-        const isNotExisted = reservations.every(
-          (reservation: any) => !reservation.bike._id.equals(bike._id)
-        );
-        if (isNotExisted) return true;
 
-        const isNotPending = reservations
-          .filter((reservation: any) => reservation.bike._id.equals(bike._id))
-          .every((reservation: any) => reservation.status === "completed");
-        if (isNotPending) return true;
+    if (ctx.user.role === UserRole.User) {
+      if (user) {
+        const userReservedBikeIds =
+          (await Reservation.distinct("bike", {
+            $and: [
+              {
+                user: { $eq: new mongoose.Types.ObjectId(user) },
+              },
+              { status: { $eq: ReserveStatus.Pending } },
+            ],
+          })) || [];
+        query._id = {
+          $in: userReservedBikeIds,
+        };
+      } else {
+        const reservedBikeIds =
+          (await Reservation.distinct("bike", {
+            $and: [
+              { status: { $eq: ReserveStatus.Pending } },
+              {
+                $or: [
+                  {
+                    $and: [
+                      { start_date: { $gte: start_date } },
+                      { start_date: { $lte: end_date } },
+                    ],
+                  },
+                  {
+                    $and: [
+                      { end_date: { $gte: start_date } },
+                      { end_date: { $lte: end_date } },
+                    ],
+                  },
+                ],
+              },
+            ],
+          })) || [];
 
-        const real = reservations.filter(
-          (reservation: any) =>
-            reservation.bike._id.equals(bike._id) &&
-            reservation.status === "pending" &&
-            (reservation.start_date > end_date ||
-              reservation.end_date < start_date)
-        );
-        if (real.length > 0) return true;
-        return false;
-      });
-      return { myBikes, availableBikes };
-    } else if (ctx.user.role === "manager") {
-      const availableBikes = await Bike.find(query).lean();
-      return { myBikes: [], availableBikes };
+        query._id = {
+          $nin: reservedBikeIds,
+        };
+      }
     }
-    // const query = {
-    //   status: "completed"
-    // }
-    // return Reservation.find({
-    //   user: ctx.user.id,
-    //   status: "pending",
-    // })
-    //   .populate({
-    //     path: "bike",
-    //     model: "Bike",
-    //   })
-    //   .populate({
-    //     path: "user",
-    //     model: "User",
-    //   })
-    //   .then((reservations: any) =>
-    //     reservations.map((reserve: any) => reserve.bike)
-    //   );
-    // const {
-    //   input: {
-    //     model = "",
-    //     color = "",
-    //     location = "",
-    //     rate = "",
-    //     start_date = "",
-    //     end_date = "",
-    //   } = {},
-    // } = args;
-    // const query: any = { deleted: { $eq: false } };
 
-    // if (model) {
-    //   query.model = {
-    //     $regex: new RegExp(model, "g"),
-    //   };
-    // }
-    // if (color) {
-    //   query.color = color;
-    // }
-    // if (location) {
-    //   query.location = location;
-    // }
-    // if (rate) {
-    //   query.rate = {
-    //     $gte: parseInt(rate),
-    //   };
-    // }
-    // if (start_date) {
-    //   query.start_date = {};
-    // }
-    // return Bike.find({}).then((bikes: any) => bikes);
+    const bikes = await Bike.find(query).lean();
+    return bikes;
   }
 
-  // @VerifyAuthorization
-  async addBike(input: any, ctx: any) {
-    if (ctx.user.role === "user") {
-      throw new ApolloError(ErrorConstants.PERMISSION_DENIED);
+  /**
+   * Add a new bike
+   */
+  @VerifyManager
+  addBike(args: any, ctx: any) {
+    const { input } = args;
+    if (!input.model) {
+      throw new ApolloError(ErrorConstants.BAD_REQUEST);
+    }
+    if (!input.color) {
+      throw new ApolloError(ErrorConstants.BAD_REQUEST);
+    }
+    if (!input.location) {
+      throw new ApolloError(ErrorConstants.BAD_REQUEST);
     }
 
-    return Bike.create({ ...input.input, rate: 0, reserved: false }).then(
-      (bike: any) => bike
-    );
+    const result = Bike.create({ ...input });
+
+    return result;
   }
 
-  // @VerifyAuthorization
+  /**
+   * Update a bike by id
+   */
   async updateBike(input: any, ctx: any) {
-    const { input: { model = "", color = "", location = "", rate = "" } = {} } =
-      input;
-    if (ctx.user.role === "user") {
+    const { input: { model = "", color = "", location = "" } = {} } = input;
+
+    // user can't update model, color, location of bike
+    if (ctx.user.role === UserRole.User) {
       if (model || color || location) {
         throw new ApolloError(ErrorConstants.PERMISSION_DENIED);
       }
     }
-    if (ctx.user.role === "manager") {
-      if (rate) {
-        throw new ApolloError(ErrorConstants.PERMISSION_DENIED);
-      }
-    }
 
-    return Bike.findOneAndUpdate(
+    const result = await Bike.findOneAndUpdate(
       {
-        _id: new mongoose.Types.ObjectId(input.id),
+        _id: new mongoose.Types.ObjectId(input._id),
       },
       input.input,
       {
         new: true,
       }
-    ).then((bike: any) => bike);
+    );
+
+    return result;
   }
 
-  // @VerifyAuthorization
+  /**
+   * Delete a bike by id
+   */
+  @VerifyManager
   async deleteBike(input: any, ctx: any) {
-    if (ctx.user.role === "user") {
-      throw new ApolloError(ErrorConstants.PERMISSION_DENIED);
+    if (!input._id) {
+      return new ApolloError(ErrorConstants.BAD_REQUEST);
     }
-
-    return Bike.findOneAndUpdate(
+    const result = await Bike.findOneAndUpdate(
       {
-        _id: new mongoose.Types.ObjectId(input.id),
+        _id: new mongoose.Types.ObjectId(input._id),
       },
       { deleted: true }
-    ).then((bike: any) => bike);
+    );
+    return result;
   }
 }
 

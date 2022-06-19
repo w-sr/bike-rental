@@ -16,10 +16,11 @@ import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import * as Yup from "yup";
 import CustomSnackbar, { CustomSnackbarProps } from "../../components/Snackbar";
-import { parseErrorMessage } from "../../utils/common/helper";
-import { CREATE_USER, UPDATE_USER } from "../../utils/mutations/users";
-import { GET_USERS } from "../../utils/quries/users";
-import { User } from "../../utils/type";
+import { parseErrorMessage } from "../../graphql/helper";
+import { CREATE_USER, UPDATE_USER } from "../../graphql/mutations/users";
+import { GET_USERS } from "../../graphql/quries/users";
+import { User } from "../../graphql/type";
+import { UserRole } from "../../utils/type";
 
 type Props = {
   onClose: () => void;
@@ -32,22 +33,26 @@ const initialValues = {
   first_name: "",
   last_name: "",
   email: "",
-  role: "user",
+  role: UserRole.User,
 };
+
+const FormSchema = Yup.object().shape({
+  first_name: Yup.string()
+    .required("First Name is required")
+    .min(2, "First name must be at least 2 letters")
+    .max(35, "Please input valid name")
+    .matches(/^[a-zA-Z]*$/, "Only alphabets are allowed for first name"),
+  last_name: Yup.string()
+    .required("Last Name is required")
+    .min(2, "First name must be at least 2 letters")
+    .max(35, "Please input valid name")
+    .matches(/^[a-zA-Z]*$/, "Only alphabets are allowed for last name"),
+  email: Yup.string().email("Invalid Email").required("Email is required"),
+  role: Yup.string().required("Role is required"),
+});
 
 const UserModal = ({ onClose, open, type, user }: Props) => {
   const [snackBarDetails, setSnackBar] = useState<CustomSnackbarProps>({});
-
-  const FormSchema = Yup.object().shape({
-    first_name: Yup.string()
-      .required("First Name is required")
-      .matches(/^[a-zA-Z]*$/, "Only alphabets are allowed for first name"),
-    last_name: Yup.string()
-      .required("Last Name is required")
-      .matches(/^[a-zA-Z]*$/, "Only alphabets are allowed for last name"),
-    email: Yup.string().email("Invalid Email").required("Email is required"),
-    role: Yup.string().required("Role is required"),
-  });
 
   const formik = useFormik({
     initialValues: user ? user : initialValues,
@@ -107,6 +112,7 @@ const UserModal = ({ onClose, open, type, user }: Props) => {
     onCompleted: (res) => {
       if (res.createUser) {
         onClose();
+        resetForm();
         setSnackBar({
           open: true,
           message: "Successfully created",
@@ -131,6 +137,7 @@ const UserModal = ({ onClose, open, type, user }: Props) => {
     formik.resetForm({
       values,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const resetForm = () => formik.resetForm();
@@ -189,7 +196,6 @@ const UserModal = ({ onClose, open, type, user }: Props) => {
                 onChange={(e) => setFieldValue("email", e.target.value)}
                 error={touched.email && Boolean(errors.email)}
                 helperText={touched.email && errors.email}
-                // disabled={type === "edit"}
               />
             </Box>
             <Box my={2}>
@@ -203,12 +209,12 @@ const UserModal = ({ onClose, open, type, user }: Props) => {
                   onChange={(e) => setFieldValue("role", e.target.value)}
                 >
                   <FormControlLabel
-                    value="manager"
+                    value={UserRole.Manager}
                     control={<Radio />}
                     label="Manager"
                   />
                   <FormControlLabel
-                    value="user"
+                    value={UserRole.User}
                     control={<Radio />}
                     label="User"
                   />

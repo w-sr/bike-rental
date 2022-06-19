@@ -1,7 +1,7 @@
 import { connection } from "mongoose";
-import { DEFAULT_PASSWORD } from "../constants/common";
-import { encryptPassword } from "../helpers/authHelpers";
-import { MongoHelper } from "../helpers/mongoHelpers";
+import { DEFAULT_PASSWORD } from "../constants/common.constants";
+import { encryptPassword } from "../helpers/auth.helpers";
+import { MongoHelper } from "../helpers/mongo.helpers";
 import { Bike, User } from "../models";
 
 const mongoHelper = new MongoHelper();

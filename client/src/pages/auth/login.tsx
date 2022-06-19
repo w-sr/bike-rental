@@ -1,16 +1,13 @@
 import { useMutation } from "@apollo/client";
 import { Box, Button, TextField, Typography } from "@mui/material";
-import { styled } from "@mui/system";
 import { useFormik } from "formik";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
-import { parseErrorMessage } from "../../utils/common/helper";
-import { LOGIN } from "../../utils/mutations/auth";
-
-const StyledLink = styled(Link)({
-  fontSize: "0.75rem",
-});
+import { parseErrorMessage } from "../../graphql/helper";
+import { LOGIN } from "../../graphql/mutations/auth";
+import { UserRole } from "../../utils/type";
+import { StyledLink } from "./styled";
 
 const initialValues = {
   email: "",
@@ -28,10 +25,10 @@ const Login = () => {
   const [login] = useMutation(LOGIN, {
     onCompleted: (res) => {
       localStorage.setItem("token", res.login.token);
-      if (res.login.user.role === "user") {
+      if (res.login.user.role === UserRole.User) {
         navigate("/bikes");
       } else {
-        navigate("/dashboard");
+        navigate("/users");
       }
     },
     onError: (err) => {

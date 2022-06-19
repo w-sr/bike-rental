@@ -8,17 +8,16 @@ import {
   DialogTitle,
   FormControlLabel,
   FormGroup,
-  Rating,
   TextField,
 } from "@mui/material";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import * as Yup from "yup";
 import CustomSnackbar, { CustomSnackbarProps } from "../../components/Snackbar";
-import { parseErrorMessage } from "../../utils/common/helper";
-import { CREATE_BIKE, UPDATE_BIKE } from "../../utils/mutations/bikes";
-import { GET_BIKES } from "../../utils/quries/bikes";
-import { Bike } from "../../utils/type";
+import { parseErrorMessage } from "../../graphql/helper";
+import { CREATE_BIKE, UPDATE_BIKE } from "../../graphql/mutations/bikes";
+import { GET_BIKES } from "../../graphql/quries/bikes";
+import { Bike } from "../../graphql/type";
 
 type Props = {
   onClose: () => void;
@@ -31,33 +30,25 @@ const initialValues = {
   model: "",
   color: "",
   location: "",
-  rate: 0,
+  rate: "0",
   reserved: false,
 };
 
+const FormSchema = Yup.object().shape({
+  model: Yup.string()
+    .required("Model is required")
+    .matches(
+      /^[a-zA-Z0-9 ]*$/,
+      "Only alphabets and numbers are allowed for model"
+    ),
+  color: Yup.string().required("Color is required"),
+  location: Yup.string()
+    .required("Location is required")
+    .matches(/^[aA-zZ \s]+$/, "Only alphabets are allowed for location"),
+});
+
 const BikeModal = ({ onClose, open, type, bike }: Props) => {
   const [snackBarDetails, setSnackBar] = useState<CustomSnackbarProps>({});
-
-  const FormSchema = Yup.object().shape({
-    model: Yup.string()
-      .trim()
-      .required("Model is required")
-      .matches(
-        /^[a-zA-Z0-9]*$/,
-        "Only alphabets and numbers are allowed for model"
-      ),
-    color: Yup.string()
-      .trim()
-      .required("Color is required")
-      .matches(
-        /^#([0-9a-f]{3}|[0-9a-f]{6})$/i,
-        "Wrong color format(for example, #000, #FFFFFF)"
-      ),
-    location: Yup.string()
-      .trim()
-      .required("Location is required")
-      .matches(/^[aA-zZ\s]+$/, "Only alphabets are allowed for location"),
-  });
 
   const formik = useFormik({
     initialValues: bike ? bike : initialValues,
@@ -66,9 +57,9 @@ const BikeModal = ({ onClose, open, type, bike }: Props) => {
       if (type === "update") {
         const variables = {
           input: {
-            model: values.model,
-            color: values.color,
-            location: values.location,
+            model: values.model.trim(),
+            color: values.color.trim(),
+            location: values.location.trim(),
           },
           id: bike?._id,
         };
@@ -76,9 +67,9 @@ const BikeModal = ({ onClose, open, type, bike }: Props) => {
       } else if (type === "add") {
         const variables = {
           input: {
-            model: values.model,
-            color: values.color,
-            location: values.location,
+            model: values.model.trim(),
+            color: values.color.trim(),
+            location: values.location.trim(),
           },
         };
         await createBike({ variables });
@@ -141,6 +132,7 @@ const BikeModal = ({ onClose, open, type, bike }: Props) => {
     formik.resetForm({
       values,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bike]);
 
   const resetForm = () => formik.resetForm();
@@ -172,7 +164,7 @@ const BikeModal = ({ onClose, open, type, bike }: Props) => {
                 name="model"
                 label="Model"
                 value={values.model}
-                onChange={(e) => setFieldValue("model", e.target.value.trim())}
+                onChange={(e) => setFieldValue("model", e.target.value)}
                 error={touched.model && Boolean(errors.model)}
                 helperText={touched.model && errors.model}
               />
@@ -184,7 +176,7 @@ const BikeModal = ({ onClose, open, type, bike }: Props) => {
                 name="color"
                 label="Color"
                 value={values.color}
-                onChange={(e) => setFieldValue("color", e.target.value.trim())}
+                onChange={(e) => setFieldValue("color", e.target.value)}
                 error={touched.color && Boolean(errors.color)}
                 helperText={touched.color && errors.color}
               />
@@ -196,37 +188,25 @@ const BikeModal = ({ onClose, open, type, bike }: Props) => {
                 name="location"
                 label="Location"
                 value={values.location}
-                onChange={(e) =>
-                  setFieldValue("location", e.target.value.trim())
-                }
+                onChange={(e) => setFieldValue("location", e.target.value)}
                 error={touched.location && Boolean(errors.location)}
                 helperText={touched.location && errors.location}
               />
             </Box>
             {type === "update" && (
-              <>
-                <Box>
-                  <Rating
-                    name="simple-rating"
-                    value={parseFloat(bike?.rate ?? "0")}
-                    readOnly
+              <Box my={2}>
+                <FormGroup>
+                  <FormControlLabel
+                    disabled
+                    control={<Checkbox checked={true} />}
+                    label={
+                      // type === "available"
+                      "Available for rental"
+                      // : "Unavailable for rental"
+                    }
                   />
-                </Box>
-                <Box my={2}>
-                  <FormGroup>
-                    <FormControlLabel
-                      disabled
-                      control={<Checkbox checked={true} />}
-                      label={
-                        // bike?.reserved
-                        // ? "Unavailable for rental"
-                        // :
-                        "Available for rental"
-                      }
-                    />
-                  </FormGroup>
-                </Box>
-              </>
+                </FormGroup>
+              </Box>
             )}
             <Box mt={5} display="flex" justifyContent="flex-end">
               <Button onClick={modalClose} autoFocus sx={{ marginRight: 2 }}>

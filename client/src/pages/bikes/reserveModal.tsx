@@ -6,47 +6,70 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Rating,
   TextField,
+  Typography,
 } from "@mui/material";
-import Rating from "@mui/material/Rating";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActionType } from ".";
 import CustomSnackbar, { CustomSnackbarProps } from "../../components/Snackbar";
-import { parseErrorMessage } from "../../utils/common/helper";
+import { parseErrorMessage } from "../../graphql/helper";
 import {
   CANCEL_RESERVATION,
   CREATE_RESERVATION,
-} from "../../utils/mutations/reservations";
-import { GET_BIKES } from "../../utils/quries/bikes";
-import { useQueryMe } from "../../utils/quries/me";
+} from "../../graphql/mutations/reservations";
+import { GET_BIKES } from "../../graphql/quries/bikes";
+import { useQueryMe } from "../../graphql/quries/me";
+import { dateIsValid } from "../../utils/common";
 
 type ModalProps = {
   type: ActionType;
   open: boolean;
+  startDate: Date | null;
+  endDate: Date | null;
   onClose: () => void;
   bikeId?: string;
 };
 
-const ReserveModal = ({ open, onClose, bikeId, type }: ModalProps) => {
+const ReserveModal = ({
+  open,
+  onClose,
+  bikeId,
+  type,
+  startDate,
+  endDate,
+}: ModalProps) => {
   const [snackBarDetails, setSnackBar] = useState<CustomSnackbarProps>({});
   const [value, setValue] = useState<number | null>(0);
-  const [start, setStart] = useState<Date | null>(new Date());
+  const [start, setStart] = useState<Date | null>(
+    startDate ? new Date(startDate) : new Date()
+  );
   const [end, setEnd] = useState<Date | null>(() => {
     var date = new Date();
     date.setDate(date.getDate() + 7);
-    return date;
+    return endDate ? endDate : date;
   });
-  const handleStartChange = (newValue: Date | null) => {
-    setStart(newValue);
-  };
-  const handleEndChange = (newValue: Date | null) => {
-    setEnd(newValue);
-  };
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const { data: me } = useQueryMe();
+
+  useEffect(() => {
+    if (startDate) setStart(startDate);
+    if (endDate) setEnd(endDate);
+  }, [startDate, endDate]);
+
+  const handleStartChange = useCallback((newValue: Date | null) => {
+    setStart(newValue);
+    setErrorMessage("");
+  }, []);
+
+  const handleEndChange = useCallback((newValue: Date | null) => {
+    setEnd(newValue);
+    setErrorMessage("");
+  }, []);
 
   const [reserveBike] = useMutation(CREATE_RESERVATION, {
     onCompleted: (res) => {
@@ -99,10 +122,10 @@ const ReserveModal = ({ open, onClose, bikeId, type }: ModalProps) => {
   const handleSubmit = async () => {
     if (!bikeId) return;
     if (type === "reserve") {
+      if (!validateDates()) return;
       await reserveBike({
         variables: {
           input: {
-            user: me?._id,
             bike: bikeId,
             start_date: start?.toISOString().split("T")[0],
             end_date: end?.toISOString().split("T")[0],
@@ -110,20 +133,46 @@ const ReserveModal = ({ open, onClose, bikeId, type }: ModalProps) => {
         },
       });
     } else if (type === "cancel") {
-      console.log("xxx");
       await cancelReserve({
         variables: {
-          id: bikeId,
-          rate: value?.toString(),
+          input: {
+            user: me?._id,
+            bike: bikeId,
+            rate: value?.toString(),
+          },
         },
       });
     }
   };
 
+  const validateDates = () => {
+    if (!start || !end) {
+      setErrorMessage("Please input valid dates");
+      return false;
+    }
+    if (!dateIsValid(new Date(start)) || !dateIsValid(new Date(end))) {
+      setErrorMessage("Please input valid dates");
+      return false;
+    }
+    if (start.toISOString().split("T")[0] > end.toISOString().split("T")[0]) {
+      setErrorMessage("End date should be greater than start date");
+      return false;
+    }
+
+    setErrorMessage("");
+    return true;
+  };
+
   const modalClose = () => {
+    setErrorMessage("");
     onClose();
     setValue(0);
   };
+
+  const renderTitle = () => (type === "cancel" ? "Cancel reserve" : "Reserve");
+
+  const renderHandleButton = () =>
+    type === "cancel" ? "Cancel reserve" : "Reserve";
 
   return (
     <>
@@ -133,13 +182,11 @@ const ReserveModal = ({ open, onClose, bikeId, type }: ModalProps) => {
         maxWidth="xs"
         aria-labelledby="add-fodd-dialog"
       >
-        <DialogTitle>
-          {type === "cancel" ? "Cancel reserve" : "Reserve"}
-        </DialogTitle>
+        <DialogTitle>{renderTitle()}</DialogTitle>
         {type === "cancel" ? (
           <DialogContent sx={{ display: "flex", justifyContent: "center" }}>
             <Rating
-              name="simple-controlled"
+              name="rating"
               value={value}
               onChange={(_, newValue) => setValue(newValue)}
             />
@@ -152,6 +199,7 @@ const ReserveModal = ({ open, onClose, bikeId, type }: ModalProps) => {
                   label="Start Date"
                   inputFormat="MM/dd/yyyy"
                   value={start}
+                  minDate={new Date()}
                   onChange={handleStartChange}
                   renderInput={(params: any) => <TextField {...params} />}
                 />
@@ -163,11 +211,19 @@ const ReserveModal = ({ open, onClose, bikeId, type }: ModalProps) => {
                   label="End Date"
                   inputFormat="MM/dd/yyyy"
                   value={end}
+                  minDate={new Date()}
                   onChange={handleEndChange}
                   renderInput={(params: any) => <TextField {...params} />}
                 />
               </LocalizationProvider>
             </Box>
+            {errorMessage && (
+              <Box m={2}>
+                <Typography variant="subtitle1" sx={{ color: "#d32f2f" }}>
+                  {errorMessage}
+                </Typography>
+              </Box>
+            )}
           </DialogContent>
         )}
         <DialogActions>
@@ -176,7 +232,7 @@ const ReserveModal = ({ open, onClose, bikeId, type }: ModalProps) => {
               Cancel
             </Button>
             <Button variant="contained" onClick={handleSubmit}>
-              {type === "cancel" ? "Cancel reserve" : "Reserve"}
+              {renderHandleButton()}
             </Button>
           </Box>
         </DialogActions>

@@ -1,24 +1,12 @@
-import BikesController from "../../../controllers/bikes.controller";
-import { GraphQLResolveInfo } from "graphql";
-import { Context } from "../../../models/context";
+import BikeController from "../../../controllers/bikes.controller";
 
-const bikeController = new BikesController();
+const bikeController = new BikeController();
 
 const bikeQueries = {
-  bikes: async (
-    _: unknown,
-    args: any,
-    ctx: Context,
-    _info: GraphQLResolveInfo
-  ) => {
+  bikes: async (_: unknown, args: any, ctx: any) => {
     return bikeController.getBikes(args, ctx);
   },
-  bike: async (
-    _: unknown,
-    args: { id: "Uuid" },
-    ctx: Context,
-    _info: GraphQLResolveInfo
-  ) => {
+  bike: async (_: unknown, args: { id: "Uuid" }, ctx: any) => {
     return bikeController.getBike(args, ctx);
   },
 };

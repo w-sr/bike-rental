@@ -8,7 +8,6 @@ type Reservation {
 }
 
 input ReservationCreateInput {
-  user: String!
   bike: String!
   start_date: String!
   end_date: String!
@@ -17,16 +16,33 @@ input ReservationCreateInput {
 input ReservationCancelInput {
   user: String!
   bike: String!
+  rate: String
 }
 
-input ReservationInputFilter {
+input ReservationsInput {
   user: String
   bike: String
+  first_name: String
+  last_name: String
+  email: String
+  model: String
+  location: String
+  color: String
+  rate: String
+  start_date: String
+  end_date: String
+  page: Int!
+  pageSize: Int!
+}
+
+type ReservationPayload {
+  items: [Reservation]
+  count: Int
 }
 
 type Query {
-  reservation(id: String!): Reservation
-  reservations(input: ReservationInputFilter): [Reservation]
+  reservation(_id: String!): Reservation
+  reservations(filters: ReservationsInput): ReservationPayload
 }
 
 type Mutation {
